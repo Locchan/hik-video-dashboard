@@ -330,6 +330,7 @@
           "</button>" +
           "</div></td>";
         usersBody.appendChild(tr);
+        if (window.HVDPasswordToggle) HVDPasswordToggle.enhance(tr);
         tr.querySelector(".btn-set-pwd").addEventListener("click", function () {
           adminError.className = "error";
           adminError.textContent = "";

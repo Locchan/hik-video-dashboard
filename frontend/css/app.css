@@ -552,6 +552,27 @@ table.config input.cell {
   font: inherit;
 }
 
+.pwd-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+label.show-password {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: #444;
+  user-select: none;
+}
+
+label.show-password input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+
 @media (max-width: 720px) {
   .panels-row {
     grid-template-columns: 1fr;

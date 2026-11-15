@@ -14,6 +14,7 @@
       "login.failed": "Login failed.",
       "login.network": "Network error.",
       "login.pwd_changed": "Password updated. Sign in with your new password.",
+      "password.show": "Show password",
 
       "header.brand": "HIK Video Dashboard",
       "header.nav.configuration": "Configuration",
@@ -128,6 +129,7 @@
       "login.failed": "Не удалось войти.",
       "login.network": "Ошибка сети.",
       "login.pwd_changed": "Пароль обновлён. Войдите с новым паролем.",
+      "password.show": "Показать пароль",
 
       "header.brand": "HIK Video Dashboard",
       "header.nav.configuration": "Настройки",
