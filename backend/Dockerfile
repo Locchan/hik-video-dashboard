@@ -27,7 +27,8 @@ ENV DB_TYPE=sqlite \
     DB_URL=/data/hvd.sqlite \
     REST_PORT=5480 \
     WS_PORT=5481 \
-    REST_WORKERS=4
+    REST_WORKERS=4 \
+    ALERTS_DIR=/alerts
 
 EXPOSE 5480 5481
 ENTRYPOINT ["hvd"]

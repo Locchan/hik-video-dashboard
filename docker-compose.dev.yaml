@@ -1,0 +1,29 @@
+# Local HVD (agregat). Backend container mounts dacha alerts at /alerts.
+# UI nginx still started by scripts/run-local.sh (host network, /api/ strip).
+services:
+  hvd:
+    image: hvd:latest
+    pull_policy: never
+    container_name: hvd-local
+    ports:
+      - "5480:5480"
+      - "5481:5481"
+    environment:
+      HVD_VERSION: dev-local
+      REST_PORT: "5480"
+      WS_PORT: "5481"
+      REST_WORKERS: "4"
+      DB_TYPE: sqlite
+      DB_URL: /data/hvd.sqlite
+      ROOT_PASSWORD: root
+      ALERTS_DIR: /alerts
+      DEBUG: "1"
+    volumes:
+      - type: bind
+        source: ./data
+        target: /data
+      - type: bind
+        source: /mnt/secondary/backups/dacha/dacha_alerts
+        target: /alerts
+        read_only: true
+    restart: unless-stopped
