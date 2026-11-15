@@ -59,11 +59,15 @@ input[type="password"] {
   font: inherit;
 }
 
+:root {
+  --ui-border: #888;
+}
+
 button,
 .btn {
   font: inherit;
   padding: 0.4rem 0.75rem;
-  border: 1px solid #888;
+  border: 1px solid var(--ui-border);
   background: #eee;
   cursor: pointer;
 }
@@ -165,12 +169,19 @@ table.config input.cell {
   grid-template-columns: minmax(16rem, 20rem) minmax(0, 1fr);
   gap: 1.25rem 1.5rem;
   align-items: start;
-  margin-top: 2rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--ui-border);
 }
 
 .panels-row .panel {
   margin-top: 0;
   min-width: 0;
+}
+
+.panels-row #admin-panel:not([hidden]) {
+  border-left: 1px solid var(--ui-border);
+  padding-left: 1.5rem;
 }
 
 .panels-row #admin-panel[hidden] {
@@ -223,6 +234,13 @@ table.config input.cell {
 @media (max-width: 720px) {
   .panels-row {
     grid-template-columns: 1fr;
+  }
+
+  .panels-row #admin-panel:not([hidden]) {
+    border-left: 0;
+    padding-left: 0;
+    border-top: 1px solid var(--ui-border);
+    padding-top: 1.25rem;
   }
 }
 
