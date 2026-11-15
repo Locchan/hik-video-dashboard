@@ -164,24 +164,40 @@ table.config input.cell {
   margin: 10vh auto 0;
 }
 
+.section-box {
+  border: 1px solid var(--ui-border);
+  background: #fff;
+  padding: 1rem;
+}
+
+.section-box > h2 {
+  font-size: 1.1rem;
+  margin: 0 0 0.75rem;
+  font-weight: 650;
+}
+
+.section-box > h3,
+.panel h3 {
+  font-size: 1rem;
+  margin: 0;
+  font-weight: 600;
+}
+
+.section-box .table-wrap {
+  border-color: #ddd;
+}
+
 .panels-row {
   display: grid;
   grid-template-columns: minmax(16rem, 20rem) minmax(0, 1fr);
   gap: 1.25rem 1.5rem;
   align-items: start;
   margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--ui-border);
 }
 
 .panels-row .panel {
   margin-top: 0;
   min-width: 0;
-}
-
-.panels-row #admin-panel:not([hidden]) {
-  border-left: 1px solid var(--ui-border);
-  padding-left: 1.5rem;
 }
 
 .panels-row #admin-panel[hidden] {
@@ -190,18 +206,6 @@ table.config input.cell {
 
 .panels-row:has(#admin-panel[hidden]) {
   grid-template-columns: minmax(16rem, 20rem);
-}
-
-.panel h2 {
-  font-size: 1.1rem;
-  margin: 0 0 0.75rem;
-  font-weight: 650;
-}
-
-.panel h3 {
-  font-size: 1rem;
-  margin: 0;
-  font-weight: 600;
 }
 
 .panels-row .card.narrow {
@@ -234,13 +238,6 @@ table.config input.cell {
 @media (max-width: 720px) {
   .panels-row {
     grid-template-columns: 1fr;
-  }
-
-  .panels-row #admin-panel:not([hidden]) {
-    border-left: 0;
-    padding-left: 0;
-    border-top: 1px solid var(--ui-border);
-    padding-top: 1.25rem;
   }
 }
 

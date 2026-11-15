@@ -17,21 +17,24 @@
         </div>
       </div>
       <p id="page-error" class="error" role="alert"></p>
-      <div class="table-wrap">
-        <table class="config">
-          <thead>
-            <tr>
-              <th>Key</th>
-              <th>Value</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="config-body"></tbody>
-        </table>
-      </div>
+      <section class="section-box" id="config-section">
+        <h2>Configuration</h2>
+        <div class="table-wrap">
+          <table class="config">
+            <thead>
+              <tr>
+                <th>Key</th>
+                <th>Value</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="config-body"></tbody>
+          </table>
+        </div>
+      </section>
 
       <div class="panels-row">
-        <section class="panel" id="account-panel">
+        <section class="section-box panel" id="account-panel">
           <h2>Account</h2>
           <form id="self-password-form" class="card stack narrow">
             <label>
@@ -47,7 +50,7 @@
           </form>
         </section>
 
-        <section class="panel" id="admin-panel" hidden>
+        <section class="section-box panel" id="admin-panel" hidden>
           <h2>Users</h2>
           <p id="admin-error" class="error" role="alert"></p>
           <form id="create-user-form" class="card stack narrow" hidden>
