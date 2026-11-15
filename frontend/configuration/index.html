@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Configuration — HIK Video Dashboard</title>
+    <link rel="stylesheet" href="/css/app.css" />
+  </head>
+  <body>
+    <main class="wrap">
+      <div class="topbar">
+        <h1>Configuration</h1>
+        <div class="actions">
+          <span id="user-label"></span>
+          <button type="button" id="btn-new">new</button>
+          <button type="button" id="btn-logout">logout</button>
+        </div>
+      </div>
+      <p id="page-error" class="error" role="alert"></p>
+      <div class="table-wrap">
+        <table class="config">
+          <thead>
+            <tr>
+              <th>Key</th>
+              <th>Value</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="config-body"></tbody>
+        </table>
+      </div>
+    </main>
+    <script src="/js/auth.js"></script>
+    <script src="/js/configuration.js"></script>
+  </body>
+</html>

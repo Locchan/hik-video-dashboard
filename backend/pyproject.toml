@@ -1,0 +1,35 @@
+[tool.poetry]
+name = "hik-video-dashboard-backend"
+version = "0.1.0"
+description = "HIK video dashboard REST backend (purest)"
+authors = ["Jaroslaw Locchansky <locchansky@gmail.com>"]
+packages = [{include = "hvd"}]
+
+[tool.poetry.dependencies]
+python = ">3.10,<3.14"
+sqlalchemy = ">2.0,<2.1"
+# Git submodule at ../purest. For local sibling hik-web-dev/purest during
+# tests/dev, run: ../scripts/use-local-purest.sh
+purest = {path = "../purest", develop = true}
+pymysql = {version = ">=1.1,<2", optional = true}
+psycopg2-binary = {version = ">=2.9,<3", optional = true}
+pyodbc = {version = ">=5.0,<6", optional = true}
+
+[tool.poetry.extras]
+mysql = ["pymysql"]
+postgresql = ["psycopg2-binary"]
+odbc = ["pyodbc"]
+
+[tool.poetry.scripts]
+hvd = "hvd.main:main"
+
+[tool.poetry.group.dev.dependencies]
+pytest = ">=8.0,<9"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

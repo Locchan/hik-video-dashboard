@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# Before push: refresh the purest submodule to origin/main and require the
+# gitlink to be committed if it moved.
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+
+if [[ ! -f .gitmodules ]] || ! grep -q 'path = purest' .gitmodules; then
+  exit 0
+fi
+
+if [[ -L purest ]]; then
+  echo "error: ./purest must be the real git submodule, not a symlink."
+  echo "Run: ./scripts/restore-submodule.sh"
+  exit 1
+fi
+
+git submodule sync --recursive >/dev/null
+git submodule update --init purest >/dev/null
+
+git -C purest fetch origin main >/dev/null 2>&1 || git -C purest fetch origin >/dev/null
+DEFAULT_BRANCH="$(git -C purest symbolic-ref -q refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@' || true)"
+DEFAULT_BRANCH="${DEFAULT_BRANCH:-main}"
+git -C purest checkout -q "${DEFAULT_BRANCH}"
+git -C purest pull -q --ff-only origin "${DEFAULT_BRANCH}" || true
+
+NEW_SHA="$(git -C purest rev-parse HEAD)"
+OLD_SHA="$(git ls-tree HEAD purest 2>/dev/null | awk '{print $3}' || true)"
+
+if [[ -n "${OLD_SHA}" && "${NEW_SHA}" != "${OLD_SHA}" ]]; then
+  git add purest
+  echo "purest submodule updated: ${OLD_SHA:0:8} -> ${NEW_SHA:0:8}"
+  echo "Commit the updated 'purest' gitlink, then push again."
+  exit 1
+fi
+
+if ! git diff --quiet -- purest 2>/dev/null; then
+  git add purest
+  echo "purest submodule has uncommitted gitlink changes; commit them, then push again."
+  exit 1
+fi
+
+exit 0
