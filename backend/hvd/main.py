@@ -37,7 +37,8 @@ def main(argv: list[str] | None = None) -> None:
         server_version=f"hvd/{os.environ.get('HVD_VERSION', '0.1.0')}",
         rest_workers=int(os.environ.get("REST_WORKERS", "4")),
         builtin_auth_endpoints=True,
-        auth_endpoint_prefix="/api/auth/",
+        # Behind nginx, /api/ is stripped; clients call /api/auth/* → upstream /auth/*.
+        auth_endpoint_prefix="/auth/",
     )
     rest_port = int(os.environ.get("REST_PORT", "8080"))
     ws_port = int(os.environ.get("WS_PORT", "8081"))

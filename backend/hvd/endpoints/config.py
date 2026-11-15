@@ -9,7 +9,7 @@ from hvd import state
 from hvd.acl import can_read, can_write, is_privileged
 from hvd.config_store import ConfigError
 
-ENDP_PATH = "/api/config"
+ENDP_PATH = "/config"
 LOGIN_REQUIRED = True
 DOCSTRING = {
     "GET": "List config entries visible to the caller, or one entry via ?entry_name=",

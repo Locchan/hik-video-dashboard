@@ -21,7 +21,7 @@ def hvd_app(run_api_server, tmp_path):
         ENDPOINTS,
         auth_backend=app_db.auth_backend,
         builtin_auth_endpoints=True,
-        auth_endpoint_prefix="/api/auth/",
+        auth_endpoint_prefix="/auth/",
     )
     return rest, app_db
 
@@ -49,7 +49,7 @@ def _req(port, method, path, headers=None):
 
 
 def _login(port, username, password):
-    status, body = _post(port, "/api/auth/login", {"username": username, "password": password})
+    status, body = _post(port, "/auth/login", {"username": username, "password": password})
     assert status == 200, body
     return body["token"]
 
@@ -61,7 +61,7 @@ def test_config_acl_create_update_delete(hvd_app):
     root_token = _login(rest, "root", DEFAULT_ROOT_PASSWORD)
     status, body = _post(
         rest,
-        "/api/auth/create_user",
+        "/auth/create_user",
         {"username": "alice", "password": "password12"},
         headers={"Authorization": f"root, {root_token}"},
     )
@@ -76,7 +76,7 @@ def test_config_acl_create_update_delete(hvd_app):
     status, body = _req(
         rest,
         "PUT",
-        "/api/config?entry_name=secret&value=s1",
+        "/config?entry_name=secret&value=s1",
         headers={"Authorization": f"root, {root_token}"},
     )
     assert status == 201
@@ -86,7 +86,7 @@ def test_config_acl_create_update_delete(hvd_app):
     status, body = _req(
         rest,
         "PUT",
-        "/api/config?entry_name=shared&value=v1",
+        "/config?entry_name=shared&value=v1",
         headers={"Authorization": f"alice, {alice_token}"},
     )
     assert status == 201
@@ -96,14 +96,14 @@ def test_config_acl_create_update_delete(hvd_app):
     status, body = _req(
         rest,
         "PUT",
-        "/api/config?entry_name=&value=x",
+        "/config?entry_name=&value=x",
         headers={"Authorization": f"alice, {alice_token}"},
     )
     assert status == 400
     status, body = _req(
         rest,
         "PUT",
-        "/api/config?entry_name=x&value=",
+        "/config?entry_name=x&value=",
         headers={"Authorization": f"alice, {alice_token}"},
     )
     assert status == 400
@@ -111,7 +111,7 @@ def test_config_acl_create_update_delete(hvd_app):
     status, body = _req(
         rest,
         "PUT",
-        "/api/config?entry_name=shared&value=v9",
+        "/config?entry_name=shared&value=v9",
         headers={"Authorization": f"alice, {alice_token}"},
     )
     assert status == 409
@@ -119,29 +119,29 @@ def test_config_acl_create_update_delete(hvd_app):
     status, body = _req(
         rest,
         "PUT",
-        "/api/config?entry_name=shared&value=root-copy",
+        "/config?entry_name=shared&value=root-copy",
         headers={"Authorization": f"root, {root_token}"},
     )
     assert status == 201
 
-    status, body = _req(rest, "GET", "/api/config", headers={"Authorization": f"root, {root_token}"})
+    status, body = _req(rest, "GET", "/config", headers={"Authorization": f"root, {root_token}"})
     assert status == 200
     assert {e["name"] for e in body["entries"]} >= {"secret", "shared"}
 
-    status, body = _req(rest, "GET", "/api/config", headers={"Authorization": f"alice, {alice_token}"})
+    status, body = _req(rest, "GET", "/config", headers={"Authorization": f"alice, {alice_token}"})
     assert status == 200
     assert {e["name"] for e in body["entries"]} == {"shared"}
     assert body["entries"][0]["value"] == "v1"
 
     status, body = _req(
-        rest, "GET", "/api/config?entry_name=secret", headers={"Authorization": f"alice, {alice_token}"}
+        rest, "GET", "/config?entry_name=secret", headers={"Authorization": f"alice, {alice_token}"}
     )
     assert status == 404
 
     status, body = _req(
         rest,
         "UPDATE",
-        "/api/config?entry_name=shared&value=v2",
+        "/config?entry_name=shared&value=v2",
         headers={"Authorization": f"alice, {alice_token}"},
     )
     assert status == 200
@@ -150,7 +150,7 @@ def test_config_acl_create_update_delete(hvd_app):
     status, body = _req(
         rest,
         "UPDATE",
-        "/api/config?entry_name=secret&value=nope",
+        "/config?entry_name=secret&value=nope",
         headers={"Authorization": f"alice, {alice_token}"},
     )
     assert status == 404
@@ -158,7 +158,7 @@ def test_config_acl_create_update_delete(hvd_app):
     status, body = _req(
         rest,
         "UPDATE",
-        "/api/config?entry_name=missing&value=x",
+        "/config?entry_name=missing&value=x",
         headers={"Authorization": f"root, {root_token}"},
     )
     assert status == 404
@@ -166,7 +166,7 @@ def test_config_acl_create_update_delete(hvd_app):
     status, body = _req(
         rest,
         "DELETE",
-        "/api/config?entry_name=shared",
+        "/config?entry_name=shared",
         headers={"Authorization": f"alice, {alice_token}"},
     )
     assert status == 200
@@ -175,7 +175,7 @@ def test_config_acl_create_update_delete(hvd_app):
     status, body = _req(
         rest,
         "DELETE",
-        "/api/config?entry_name=shared",
+        "/config?entry_name=shared",
         headers={"Authorization": f"alice, {alice_token}"},
     )
     assert status == 404
