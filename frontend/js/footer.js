@@ -8,14 +8,20 @@
     return host;
   }
 
+  function bakedFrontend() {
+    return (
+      (typeof global.HVD_FRONTEND_VERSION === "string" &&
+        global.HVD_FRONTEND_VERSION) ||
+      ""
+    );
+  }
+
   function render(versions) {
     var host = ensureHost();
     var backend = (versions && versions.backend) || "?";
-    var frontend =
-      (versions && versions.frontend) ||
-      (typeof global.HVD_FRONTEND_VERSION === "string" &&
-        global.HVD_FRONTEND_VERSION) ||
-      "?";
+    // Prefer the version baked into this frontend image so UI-only deploys
+    // do not depend on recreating the backend for /api/version.
+    var frontend = bakedFrontend() || (versions && versions.frontend) || "?";
     var purest = (versions && versions.purest) || "?";
 
     host.innerHTML =
@@ -49,10 +55,7 @@
   function mount() {
     render({
       backend: "…",
-      frontend:
-        (typeof global.HVD_FRONTEND_VERSION === "string" &&
-          global.HVD_FRONTEND_VERSION) ||
-        "…",
+      frontend: bakedFrontend() || "…",
       purest: "…",
     });
 
@@ -81,10 +84,7 @@
         } else {
           render({
             backend: "?",
-            frontend:
-              (typeof global.HVD_FRONTEND_VERSION === "string" &&
-                global.HVD_FRONTEND_VERSION) ||
-              "?",
+            frontend: bakedFrontend() || "?",
             purest: "?",
           });
         }
@@ -92,10 +92,7 @@
       .catch(function () {
         render({
           backend: "?",
-          frontend:
-            (typeof global.HVD_FRONTEND_VERSION === "string" &&
-              global.HVD_FRONTEND_VERSION) ||
-            "?",
+          frontend: bakedFrontend() || "?",
           purest: "?",
         });
       });
