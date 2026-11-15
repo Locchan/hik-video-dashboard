@@ -21,7 +21,7 @@ a {
 }
 
 .wrap {
-  width: min(960px, 100% - 2rem);
+  width: min(1100px, 100% - 2rem);
   margin: 0 auto;
   padding: 1.25rem 0 2rem;
 }
@@ -82,7 +82,11 @@ button:disabled,
 .error {
   color: #a10000;
   font-size: 0.9rem;
-  min-height: 1.2em;
+}
+
+.error:empty,
+.ok:empty {
+  display: none;
 }
 
 .topbar {
@@ -109,7 +113,11 @@ button:disabled,
 table.config {
   width: 100%;
   border-collapse: collapse;
-  min-width: 28rem;
+  min-width: 20rem;
+}
+
+#users-table-wrap table.config {
+  min-width: 0;
 }
 
 table.config th,
@@ -153,25 +161,24 @@ table.config input.cell {
 }
 
 .panels-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.25rem;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: minmax(16rem, 20rem) minmax(0, 1fr);
+  gap: 1.25rem 1.5rem;
+  align-items: start;
   margin-top: 2rem;
 }
 
 .panels-row .panel {
   margin-top: 0;
-  flex: 1 1 16rem;
   min-width: 0;
 }
 
-.panels-row #account-panel {
-  flex: 0 1 18rem;
+.panels-row #admin-panel[hidden] {
+  display: none;
 }
 
-.panels-row #admin-panel {
-  flex: 1 1 28rem;
+.panels-row:has(#admin-panel[hidden]) {
+  grid-template-columns: minmax(16rem, 20rem);
 }
 
 .panel h2 {
@@ -186,15 +193,15 @@ table.config input.cell {
   font-weight: 600;
 }
 
-.card.narrow {
-  max-width: 24rem;
+.panels-row .card.narrow {
+  max-width: none;
+  width: 100%;
   margin-bottom: 1rem;
 }
 
 .ok {
   color: #0a5a0a;
   font-size: 0.9rem;
-  min-height: 1.2em;
 }
 
 .inline-pwd {
@@ -215,13 +222,7 @@ table.config input.cell {
 
 @media (max-width: 720px) {
   .panels-row {
-    flex-direction: column;
-  }
-
-  .panels-row #account-panel,
-  .panels-row #admin-panel {
-    flex: 1 1 auto;
-    width: 100%;
+    grid-template-columns: 1fr;
   }
 }
 
