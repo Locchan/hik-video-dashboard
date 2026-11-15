@@ -133,16 +133,16 @@
 
       "header.brand": "HIK Video Dashboard",
       "header.nav.configuration": "Настройки",
-      "header.nav.alerts": "Тревоги",
+      "header.nav.alerts": "Сработки",
       "header.logout": "Выйти",
       "footer.backend": "backend",
       "footer.frontend": "frontend",
       "footer.purest": "purest",
 
-      "alerts.title": "Тревоги — HIK Video Dashboard",
-      "alerts.heading": "Тревоги",
-      "alerts.empty": "Тревог не найдено.",
-      "alerts.load_failed": "Не удалось загрузить тревоги.",
+      "alerts.title": "Сработки — HIK Video Dashboard",
+      "alerts.heading": "Сработки",
+      "alerts.empty": "Сработок не найдено.",
+      "alerts.load_failed": "Не удалось загрузить сработки.",
       "alerts.thumb_error": "Не удалось получить миниатюру",
       "alerts.play": "Играть",
       "alerts.video_failed": "Не удалось загрузить видео.",
@@ -167,7 +167,7 @@
       "app.title": "HIK Video Dashboard",
       "app.heading": "Главная",
       "app.empty": "Панели функций пока недоступны. Управляйте системой через Настройки.",
-      "app.section.alerts.desc": "Просмотр тревог с камер и воспроизведение записей.",
+      "app.section.alerts.desc": "Просмотр сработок с камер и воспроизведение записей.",
       "app.section.configuration.desc": "Записи конфигурации, аккаунт, пользователи и флаги функций.",
 
       "config.title": "Настройки — HIK Video Dashboard",
@@ -231,8 +231,8 @@
       "features.col.enabled": "Вкл.",
       "feature.CONFIG.title": "Настройки",
       "feature.CONFIG.desc": "Хранилище и редактор ключей конфигурации группы.",
-      "feature.ALERT_VIEW.title": "Тревоги",
-      "feature.ALERT_VIEW.desc": "Просмотр клипов тревог с ближайшими снимками.",
+      "feature.ALERT_VIEW.title": "Сработки",
+      "feature.ALERT_VIEW.desc": "Просмотр клипов сработок с ближайшими снимками.",
     },
   };
 

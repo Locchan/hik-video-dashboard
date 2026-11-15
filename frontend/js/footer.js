@@ -1,4 +1,7 @@
 (function (global) {
+  var CACHE_KEY = "hvd_version_cache";
+  var CACHE_TTL_MS = 15 * 60 * 1000;
+
   function ensureHost() {
     var host = document.getElementById("site-footer");
     if (host) return host;
@@ -14,6 +17,37 @@
         global.HVD_FRONTEND_VERSION) ||
       ""
     );
+  }
+
+  function readCache() {
+    try {
+      var raw = localStorage.getItem(CACHE_KEY);
+      if (!raw) return null;
+      var parsed = JSON.parse(raw);
+      if (
+        !parsed ||
+        typeof parsed.ts !== "number" ||
+        !parsed.data ||
+        typeof parsed.data !== "object"
+      ) {
+        return null;
+      }
+      if (Date.now() - parsed.ts > CACHE_TTL_MS) return null;
+      return parsed.data;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function writeCache(data) {
+    try {
+      localStorage.setItem(
+        CACHE_KEY,
+        JSON.stringify({ ts: Date.now(), data: data })
+      );
+    } catch (e) {
+      /* ignore quota / private mode */
+    }
   }
 
   function render(versions) {
@@ -52,42 +86,51 @@
       .replace(/"/g, "&quot;");
   }
 
+  function fetchVersion() {
+    if (global.HVDAuth) return HVDAuth.api("/api/version");
+    return fetch("/api/version", { credentials: "same-origin" }).then(
+      function (resp) {
+        return resp.text().then(function (text) {
+          var data = {};
+          if (text) {
+            try {
+              data = JSON.parse(text);
+            } catch (e) {
+              data = {};
+            }
+          }
+          return { ok: resp.ok, data: data };
+        });
+      }
+    );
+  }
+
   function mount() {
+    var cached = readCache();
+    if (cached) {
+      render(cached);
+      return Promise.resolve(cached);
+    }
+
     render({
       backend: "…",
       frontend: bakedFrontend() || "…",
       purest: "…",
     });
 
-    var req = global.HVDAuth
-      ? HVDAuth.api("/api/version")
-      : fetch("/api/version", { credentials: "same-origin" }).then(function (
-          resp
-        ) {
-          return resp.text().then(function (text) {
-            var data = {};
-            if (text) {
-              try {
-                data = JSON.parse(text);
-              } catch (e) {
-                data = {};
-              }
-            }
-            return { ok: resp.ok, data: data };
-          });
-        });
-
-    return req
+    return fetchVersion()
       .then(function (res) {
         if (res && res.ok && res.data) {
+          writeCache(res.data);
           render(res.data);
-        } else {
-          render({
-            backend: "?",
-            frontend: bakedFrontend() || "?",
-            purest: "?",
-          });
+          return res.data;
         }
+        render({
+          backend: "?",
+          frontend: bakedFrontend() || "?",
+          purest: "?",
+        });
+        return null;
       })
       .catch(function () {
         render({
@@ -95,6 +138,7 @@
           frontend: bakedFrontend() || "?",
           purest: "?",
         });
+        return null;
       });
   }
 
