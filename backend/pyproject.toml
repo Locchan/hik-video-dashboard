@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "hik-video-dashboard-backend"
-version = "0.2.0"
+version = "0.2.1"
 description = "HIK video dashboard REST backend (purest)"
 authors = ["Jaroslaw Locchansky <locchansky@gmail.com>"]
 packages = [{include = "hvd"}]
