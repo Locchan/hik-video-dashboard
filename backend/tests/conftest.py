@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import threading
 
 import pytest
@@ -7,6 +8,10 @@ import pytest
 import purest.config as config_mod
 import purest.server as server_mod
 from purest import configure
+
+from hvd import state
+from hvd.db import init_db
+from hvd.endpoints import ENDPOINTS
 
 
 @pytest.fixture(autouse=True)
@@ -73,3 +78,38 @@ def run_api_server(free_ports):
         return rest_port, ws_port
 
     yield _start
+
+
+def _pg_kwargs():
+    return {
+        "db_type": "postgresql",
+        "url": os.environ.get("HVD_TEST_DB_HOST", "127.0.0.1:5433"),
+        "username": os.environ.get("HVD_TEST_DB_USER", "hvd"),
+        "password": os.environ.get("HVD_TEST_DB_PASSWORD", "hvd"),
+        "database": os.environ.get("HVD_TEST_DB_NAME", "hvd"),
+        "root_password": "root",
+    }
+
+
+@pytest.fixture
+def hvd_app(run_api_server):
+    """Boot HVD against local compose Postgres (port 5433)."""
+    try:
+        app_db = init_db(**_pg_kwargs())
+    except Exception as e:
+        pytest.skip(f"PostgreSQL not available for tests: {e}")
+    state.app_db = app_db
+    rest, _ = run_api_server(
+        ENDPOINTS,
+        auth_backend=app_db.auth_backend,
+        builtin_auth_endpoints=True,
+        auth_endpoint_prefix="/auth/",
+        feature_enabled=app_db.feature_store.is_enabled,
+        auth_cookie_user="hvd_user",
+        auth_cookie_token="hvd_token",
+    )
+    return rest, app_db
+
+
+def auth_cookie(username: str, token: str) -> dict[str, str]:
+    return {"Cookie": f"hvd_user={username}; hvd_token={token}"}

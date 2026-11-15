@@ -2,12 +2,17 @@
 
 from __future__ import annotations
 
-from purest.auth.policy import ROOT_CAPABILITY
+from purest.auth.policy import PUR_CAP_ADMIN, ROOT_CAPABILITY
 
 
 def is_privileged(auth_backend, username: str) -> bool:
     """Root / ALL can see and change every config entry."""
     return auth_backend.check_capability(username, ROOT_CAPABILITY)
+
+
+def is_admin(auth_backend, username: str) -> bool:
+    """PUR_CAP_ADMIN (root/ALL bypass check_capability)."""
+    return auth_backend.check_capability(username, PUR_CAP_ADMIN)
 
 
 def can_read(auth_backend, username: str, entry: dict) -> bool:

@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Local HVD: docker backend (5480/5481) with /alerts mount + nginx frontend (5482).
+# Local HVD: postgres + docker backend (5480/5481) + nginx frontend (5482).
 # Does not touch prod. Ctrl+C stops both.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DATA_DIR="${HVD_DATA_DIR:-$ROOT/data}"
 ALERTS_HOST="${ALERTS_HOST:-/mnt/secondary/backups/dacha/dacha_alerts}"
-mkdir -p "$DATA_DIR"
+mkdir -p "$DATA_DIR/postgres"
 
 if [[ ! -d "$ALERTS_HOST" ]]; then
   echo "Alerts dir missing: $ALERTS_HOST"
@@ -29,23 +29,23 @@ if ! docker image inspect hvd:latest >/dev/null 2>&1; then
   exit 1
 fi
 
-echo "Starting backend container (alerts: ${ALERTS_HOST} → /alerts)..."
-docker compose -f "$ROOT/docker-compose.dev.yaml" up -d --force-recreate hvd
+echo "Starting postgres + backend (alerts: ${ALERTS_HOST} → /alerts)..."
+docker compose -f "$ROOT/docker-compose.dev.yaml" up -d --force-recreate
 
-for _ in $(seq 1 60); do
+for _ in $(seq 1 90); do
   if curl -sf -o /dev/null -X POST "http://127.0.0.1:5480/auth/login" \
     -H 'Content-Type: application/json' \
     -d '{"username":"root","password":"root"}'; then
     break
   fi
-  sleep 0.25
+  sleep 0.5
 done
 
 if ! curl -sf -o /dev/null -X POST "http://127.0.0.1:5480/auth/login" \
   -H 'Content-Type: application/json' \
   -d '{"username":"root","password":"root"}'; then
   echo "Backend did not become ready."
-  docker compose -f "$ROOT/docker-compose.dev.yaml" logs --tail 40 hvd || true
+  docker compose -f "$ROOT/docker-compose.dev.yaml" logs --tail 60 || true
   exit 1
 fi
 
@@ -54,7 +54,6 @@ docker exec hvd-local ls /alerts >/dev/null
 docker exec hvd-local sh -c 'test -d /alerts/J_HikAlertClip && test -d /alerts/J_HikAlertSnap'
 
 echo "Starting frontend nginx on :5482 (proxy /api/ → :5480)..."
-# Stop any leftover host-network nginx on 5482
 docker ps -q --filter ancestor=nginx:stable-alpine | while read -r cid; do
   docker stop "$cid" >/dev/null 2>&1 || true
 done
@@ -68,8 +67,7 @@ echo "Local HVD ready:"
 echo "  UI:     http://127.0.0.1:5482/"
 echo "  API:    http://127.0.0.1:5480/  (via UI as /api/...)"
 echo "  Alerts: ${ALERTS_HOST} → /alerts (ALERTS_DIR)"
-echo "  DB:     ${DATA_DIR}/hvd.sqlite"
+echo "  DB:     postgresql://hvd:hvd@127.0.0.1:5433/hvd  (data: ${DATA_DIR}/postgres)"
 echo "  root / root"
 echo
-# Keep script attached until interrupted
 docker compose -f "$ROOT/docker-compose.dev.yaml" logs -f hvd

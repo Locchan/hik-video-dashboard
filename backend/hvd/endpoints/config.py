@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from purest import api_endp, auth, get_config
+from purest import api_endp, auth, feat_req, get_config
 from purest.auth import PUR_CAP_BASIC_USER, auth_username
 
 from hvd import state
 from hvd.acl import can_read, can_write, is_privileged
 from hvd.config_store import ConfigError
+from hvd.features import FEAT_CONFIG
 
 ENDP_PATH = "/config"
 LOGIN_REQUIRED = True
@@ -37,6 +38,7 @@ def _find_visible(entries, name: str, backend, username: str, *, write: bool):
 
 
 @auth(PUR_CAP_BASIC_USER)
+@feat_req(FEAT_CONFIG)
 @api_endp
 def impl_GET(headers, query=None):
     username = auth_username(headers)
@@ -53,6 +55,7 @@ def impl_GET(headers, query=None):
 
 
 @auth(PUR_CAP_BASIC_USER)
+@feat_req(FEAT_CONFIG)
 @api_endp
 def impl_PUT(headers, query=None):
     """Create a new config entry for the caller's group."""
@@ -85,6 +88,7 @@ def impl_PUT(headers, query=None):
 
 
 @auth(PUR_CAP_BASIC_USER)
+@feat_req(FEAT_CONFIG)
 @api_endp
 def impl_UPDATE(headers, query=None):
     username = auth_username(headers)
@@ -116,6 +120,7 @@ def impl_UPDATE(headers, query=None):
 
 
 @auth(PUR_CAP_BASIC_USER)
+@feat_req(FEAT_CONFIG)
 @api_endp
 def impl_DELETE(headers, query=None):
     username = auth_username(headers)

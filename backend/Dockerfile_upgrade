@@ -13,7 +13,7 @@ COPY backend /src/backend
 WORKDIR /src/backend
 RUN poetry config virtualenvs.create false \
  && poetry install --only main --no-interaction --no-ansi \
-      --extras mysql --extras postgresql \
+      --extras postgresql \
  && rm -rf /root/.cache /root/.local
 
 WORKDIR /data

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title data-i18n="alerts.title">Alerts — HIK Video Dashboard</title>
+    <link rel="stylesheet" href="/css/app.css" />
+  </head>
+  <body>
+    <div id="site-header"></div>
+    <main class="wrap">
+      <h1 data-i18n="alerts.heading">Alerts</h1>
+      <p id="alerts-error" class="error" role="alert"></p>
+      <p id="alerts-empty" class="muted" data-i18n="alerts.empty" hidden>No alerts found.</p>
+      <div id="alerts-list" class="alerts-list" aria-live="polite"></div>
+    </main>
+    <script src="/js/i18n.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/features.js"></script>
+    <script src="/js/header.js"></script>
+    <script src="/js/alerts.js"></script>
+  </body>
+</html>

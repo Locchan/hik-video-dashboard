@@ -47,12 +47,6 @@
     return { username: username, token: token };
   }
 
-  function authHeader() {
-    var session = getSession();
-    if (!session) return null;
-    return session.username + ", " + session.token;
-  }
-
   function requireSession(loginPath) {
     if (!getSession()) {
       window.location.replace(loginPath || "/");
@@ -64,26 +58,25 @@
   function api(path, options) {
     options = options || {};
     var headers = Object.assign({}, options.headers || {});
-    var auth = authHeader();
-    if (auth) headers.Authorization = auth;
     if (options.body && !headers["Content-Type"]) {
       headers["Content-Type"] = "application/json";
     }
-    return fetch(path, Object.assign({}, options, { headers: headers })).then(
-      function (resp) {
-        return resp.text().then(function (text) {
-          var data = {};
-          if (text) {
-            try {
-              data = JSON.parse(text);
-            } catch (e) {
-              data = { error: text };
-            }
+    return fetch(
+      path,
+      Object.assign({}, options, { headers: headers, credentials: "same-origin" })
+    ).then(function (resp) {
+      return resp.text().then(function (text) {
+        var data = {};
+        if (text) {
+          try {
+            data = JSON.parse(text);
+          } catch (e) {
+            data = { error: text };
           }
-          return { status: resp.status, ok: resp.ok, data: data };
-        });
-      }
-    );
+        }
+        return { status: resp.status, ok: resp.ok, data: data };
+      });
+    });
   }
 
   global.HVDAuth = {
@@ -92,5 +85,7 @@
     getSession: getSession,
     requireSession: requireSession,
     api: api,
+    USER_COOKIE: USER_COOKIE,
+    TOKEN_COOKIE: TOKEN_COOKIE,
   };
 })(window);

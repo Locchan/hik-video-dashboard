@@ -31,6 +31,7 @@ def main(argv: list[str] | None = None) -> None:
         type(app_db.provider).__name__,
         app_db.provider.dialect_name,
     )
+    feature_store = app_db.feature_store
     configure(
         auth_backend=app_db.auth_backend,
         logger=logger,
@@ -39,6 +40,9 @@ def main(argv: list[str] | None = None) -> None:
         builtin_auth_endpoints=True,
         # Behind nginx, /api/ is stripped; clients call /api/auth/* → upstream /auth/*.
         auth_endpoint_prefix="/auth/",
+        feature_enabled=feature_store.is_enabled,
+        auth_cookie_user="hvd_user",
+        auth_cookie_token="hvd_token",
     )
     rest_port = int(os.environ.get("REST_PORT", "8080"))
     ws_port = int(os.environ.get("WS_PORT", "8081"))

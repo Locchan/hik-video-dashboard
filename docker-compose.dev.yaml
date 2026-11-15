@@ -1,10 +1,32 @@
-# Local HVD (agregat). Backend container mounts dacha alerts at /alerts.
-# UI nginx still started by scripts/run-local.sh (host network, /api/ strip).
+# Local HVD (agregat): PostgreSQL + backend. UI nginx via scripts/run-local.sh.
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: hvd-postgres
+    environment:
+      POSTGRES_USER: hvd
+      POSTGRES_PASSWORD: hvd
+      POSTGRES_DB: hvd
+    ports:
+      - "5433:5432"
+    volumes:
+      - type: bind
+        source: ./data/postgres
+        target: /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hvd -d hvd"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+
   hvd:
     image: hvd:latest
     pull_policy: never
     container_name: hvd-local
+    depends_on:
+      postgres:
+        condition: service_healthy
     ports:
       - "5480:5480"
       - "5481:5481"
@@ -13,15 +35,15 @@ services:
       REST_PORT: "5480"
       WS_PORT: "5481"
       REST_WORKERS: "4"
-      DB_TYPE: sqlite
-      DB_URL: /data/hvd.sqlite
+      DB_TYPE: postgresql
+      DB_URL: postgres
+      DB_USERNAME: hvd
+      DB_PASSWORD: hvd
+      DB_DATABASE: hvd
       ROOT_PASSWORD: root
       ALERTS_DIR: /alerts
       DEBUG: "1"
     volumes:
-      - type: bind
-        source: ./data
-        target: /data
       - type: bind
         source: /mnt/secondary/backups/dacha/dacha_alerts
         target: /alerts
