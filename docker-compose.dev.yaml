@@ -25,5 +25,4 @@ services:
       - type: bind
         source: /mnt/secondary/backups/dacha/dacha_alerts
         target: /alerts
-        read_only: true
     restart: unless-stopped
