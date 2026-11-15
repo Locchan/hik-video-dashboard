@@ -35,6 +35,7 @@ services:
       REST_PORT: "5480"
       WS_PORT: "5481"
       REST_WORKERS: "4"
+      CORS_ORIGINS: "*"
       DB_TYPE: postgresql
       DB_URL: postgres
       DB_USERNAME: hvd

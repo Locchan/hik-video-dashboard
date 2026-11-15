@@ -33,6 +33,8 @@ def main(argv: list[str] | None = None) -> None:
         app_db.provider.dialect_name,
     )
     feature_store = app_db.feature_store
+    # Dev/testing: CORS_ORIGINS=* ; production: https://hvd.locchan.dev
+    cors_origins = os.environ.get("CORS_ORIGINS", "*").strip() or "*"
     configure(
         auth_backend=app_db.auth_backend,
         logger=logger,
@@ -44,6 +46,7 @@ def main(argv: list[str] | None = None) -> None:
         feature_enabled=feature_store.is_enabled,
         auth_cookie_user="hvd_user",
         auth_cookie_token="hvd_token",
+        cors_origins=cors_origins,
     )
     rest_port = int(os.environ.get("REST_PORT", "8080"))
     ws_port = int(os.environ.get("WS_PORT", "8081"))
