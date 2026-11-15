@@ -152,8 +152,26 @@ table.config input.cell {
   margin: 10vh auto 0;
 }
 
-.panel {
+.panels-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  align-items: flex-start;
   margin-top: 2rem;
+}
+
+.panels-row .panel {
+  margin-top: 0;
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+
+.panels-row #account-panel {
+  flex: 0 1 18rem;
+}
+
+.panels-row #admin-panel {
+  flex: 1 1 28rem;
 }
 
 .panel h2 {
@@ -193,6 +211,18 @@ table.config input.cell {
   padding: 0.35rem 0.45rem;
   border: 1px solid #bbb;
   font: inherit;
+}
+
+@media (max-width: 720px) {
+  .panels-row {
+    flex-direction: column;
+  }
+
+  .panels-row #account-panel,
+  .panels-row #admin-panel {
+    flex: 1 1 auto;
+    width: 100%;
+  }
 }
 
 @media (max-width: 600px) {
