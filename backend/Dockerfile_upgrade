@@ -1,0 +1,20 @@
+# Fast backend refresh: reuse hvd:latest (deps/tooling already present) and
+# only reinstall purest + the hvd package. Use when app code changed but
+# pyproject/lock deps did not. Requires a prior full ./build-backend.
+FROM hvd:latest
+
+ARG VERSION=dev
+ENV HVD_VERSION=${VERSION}
+
+WORKDIR /src
+COPY purest /src/purest
+COPY backend /src/backend
+
+WORKDIR /src/backend
+RUN poetry config virtualenvs.create false \
+ && poetry install --only main --no-interaction --no-ansi \
+      --extras mysql --extras postgresql \
+ && rm -rf /root/.cache /root/.local
+
+WORKDIR /data
+ENTRYPOINT ["hvd"]
