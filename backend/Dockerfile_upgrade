@@ -9,6 +9,7 @@ ENV HVD_VERSION=${VERSION}
 WORKDIR /src
 COPY purest /src/purest
 COPY backend /src/backend
+COPY frontend/VERSION /usr/local/share/hvd/FRONTEND_VERSION
 
 WORKDIR /src/backend
 RUN poetry config virtualenvs.create false \

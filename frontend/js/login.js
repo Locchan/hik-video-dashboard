@@ -1,5 +1,6 @@
 (function () {
   HVDi18n.initFromSystem();
+  if (window.HVDFooter) HVDFooter.mount();
 
   var form = document.getElementById("login-form");
   var errorEl = document.getElementById("login-error");

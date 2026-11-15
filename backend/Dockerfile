@@ -11,6 +11,8 @@ RUN pip install --no-cache-dir "poetry>=1.8,<2.2"
 WORKDIR /src
 COPY purest /src/purest
 COPY backend /src/backend
+# Independent frontend semver for GET /version (overridable via HVD_FRONTEND_VERSION).
+COPY frontend/VERSION /usr/local/share/hvd/FRONTEND_VERSION
 
 WORKDIR /src/backend
 RUN poetry config virtualenvs.create false \

@@ -8,6 +8,7 @@ import sys
 
 from purest import configure, serve
 
+from hvd import __version__ as hvd_version
 from hvd import state
 from hvd.db import init_db
 from hvd.endpoints import ENDPOINTS
@@ -35,7 +36,7 @@ def main(argv: list[str] | None = None) -> None:
     configure(
         auth_backend=app_db.auth_backend,
         logger=logger,
-        server_version=f"hvd/{os.environ.get('HVD_VERSION', '0.1.0')}",
+        server_version=f"hvd/{os.environ.get('HVD_VERSION', hvd_version)}",
         rest_workers=int(os.environ.get("REST_WORKERS", "4")),
         builtin_auth_endpoints=True,
         # Behind nginx, /api/ is stripped; clients call /api/auth/* → upstream /auth/*.

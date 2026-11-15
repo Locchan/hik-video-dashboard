@@ -19,6 +19,9 @@
       "header.nav.configuration": "Configuration",
       "header.nav.alerts": "Alerts",
       "header.logout": "Log out",
+      "footer.backend": "backend",
+      "footer.frontend": "frontend",
+      "footer.purest": "purest",
 
       "alerts.title": "Alerts — HIK Video Dashboard",
       "alerts.heading": "Alerts",
@@ -130,6 +133,9 @@
       "header.nav.configuration": "Настройки",
       "header.nav.alerts": "Тревоги",
       "header.logout": "Выйти",
+      "footer.backend": "backend",
+      "footer.frontend": "frontend",
+      "footer.purest": "purest",
 
       "alerts.title": "Тревоги — HIK Video Dashboard",
       "alerts.heading": "Тревоги",

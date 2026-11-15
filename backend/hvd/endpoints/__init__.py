@@ -3,9 +3,11 @@ from hvd.endpoints import alerts as alerts_endpoint
 from hvd.endpoints import config as config_endpoint
 from hvd.endpoints import features as features_endpoint
 from hvd.endpoints import thumbnail as thumbnail_endpoint
+from hvd.endpoints import version as version_endpoint
 
 # User auth/create/remove come from purest builtin endpoints (/api/auth/*).
 ENDPOINTS = [
+    version_endpoint,
     config_endpoint,
     features_endpoint,
     alerts_endpoint,

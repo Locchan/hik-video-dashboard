@@ -1,2 +1,3 @@
-/* Overwritten at image build with the git short SHA (or package version). */
-window.HVD_VERSION = "dev";
+/* Overwritten at image build from frontend/VERSION (+ optional BUILD_ID). */
+window.HVD_FRONTEND_VERSION = "0.1.0";
+window.HVD_BUILD_ID = "dev";
