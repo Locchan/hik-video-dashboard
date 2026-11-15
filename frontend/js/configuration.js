@@ -6,9 +6,18 @@
   var newBtn = document.getElementById("btn-new");
   var logoutBtn = document.getElementById("btn-logout");
   var userLabel = document.getElementById("user-label");
+  var selfForm = document.getElementById("self-password-form");
+  var selfError = document.getElementById("self-password-error");
+  var adminPanel = document.getElementById("admin-panel");
+  var adminError = document.getElementById("admin-error");
+  var usersBody = document.getElementById("users-body");
+  var createForm = document.getElementById("create-user-form");
   var entries = [];
   var mode = null; // null | "edit" | "delete" | "create"
   var activeName = null;
+  var capabilities = [];
+  var isAdmin = false;
+  var canCreate = false;
 
   var session = HVDAuth.getSession();
   userLabel.textContent = session.username;
@@ -29,6 +38,10 @@
     errorEl.textContent = msg || "";
   }
 
+  function hasCap(cap) {
+    return capabilities.indexOf(cap) !== -1;
+  }
+
   function validatePair(name, value, excludeName) {
     name = (name || "").trim();
     value = (value || "").trim();
@@ -43,14 +56,39 @@
     return null;
   }
 
+  function handleAuthFailure(res) {
+    if (res.status === 401) {
+      HVDAuth.clearSession();
+      window.location.replace("/");
+      return true;
+    }
+    return false;
+  }
+
+  function loadWhoami() {
+    return HVDAuth.api("/api/auth/whoami").then(function (res) {
+      if (handleAuthFailure(res)) return;
+      if (!res.ok) return;
+      capabilities = (res.data && res.data.capabilities) || [];
+      isAdmin =
+        hasCap("PUR_CAP_ADMIN") ||
+        hasCap("PUR_CAP_ROOT") ||
+        hasCap("PUR_CAP_ALL");
+      canCreate =
+        hasCap("PUR_CAP_CREATE_USER") ||
+        hasCap("PUR_CAP_ROOT") ||
+        hasCap("PUR_CAP_ALL");
+      adminPanel.hidden = !(isAdmin || canCreate);
+      createForm.hidden = !canCreate;
+      document.getElementById("users-table-wrap").hidden = !isAdmin;
+      if (isAdmin) loadUsers();
+    });
+  }
+
   function load() {
     setError("");
     return HVDAuth.api("/api/config").then(function (res) {
-      if (res.status === 401) {
-        HVDAuth.clearSession();
-        window.location.replace("/");
-        return;
-      }
+      if (handleAuthFailure(res)) return;
       if (!res.ok) {
         setError((res.data && res.data.error) || "Failed to load config.");
         entries = [];
@@ -62,6 +100,133 @@
       activeName = null;
       render();
     });
+  }
+
+  function loadUsers() {
+    adminError.textContent = "";
+    return HVDAuth.api("/api/auth/users").then(function (res) {
+      if (handleAuthFailure(res)) return;
+      if (!res.ok) {
+        adminError.textContent =
+          (res.data && res.data.error) || "Failed to load users.";
+        usersBody.innerHTML = "";
+        return;
+      }
+      renderUsers((res.data && res.data.users) || []);
+    });
+  }
+
+  function setPassword(username, password, errorEl) {
+    return HVDAuth.api("/api/auth/set_password", {
+      method: "POST",
+      body: JSON.stringify({ username: username, password: password }),
+    }).then(function (res) {
+      if (handleAuthFailure(res)) return null;
+      if (!res.ok) {
+        if (errorEl) {
+          errorEl.className = "error";
+          errorEl.textContent =
+            (res.data && res.data.error) || "Password change failed.";
+        }
+        return null;
+      }
+      return res;
+    });
+  }
+
+  selfForm.addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    selfError.textContent = "";
+    var password = document.getElementById("self-password").value;
+    var confirm = document.getElementById("self-password-confirm").value;
+    if (password.length < 8) {
+      selfError.textContent = "Password must be at least 8 characters.";
+      return;
+    }
+    if (password !== confirm) {
+      selfError.textContent = "Passwords do not match.";
+      return;
+    }
+    setPassword(session.username, password, selfError).then(function (res) {
+      if (!res) return;
+      // Password change expires all tokens, including this session.
+      HVDAuth.clearSession();
+      window.location.replace("/?pwd=changed");
+    });
+  });
+
+  createForm.addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    adminError.textContent = "";
+    var username = document.getElementById("create-username").value.trim();
+    var password = document.getElementById("create-password").value;
+    if (username.length < 4) {
+      adminError.textContent = "Username must be at least 4 characters.";
+      return;
+    }
+    if (password.length < 8) {
+      adminError.textContent = "Password must be at least 8 characters.";
+      return;
+    }
+    HVDAuth.api("/api/auth/create_user", {
+      method: "POST",
+      body: JSON.stringify({ username: username, password: password }),
+    }).then(function (res) {
+      if (handleAuthFailure(res)) return;
+      if (!res.ok) {
+        adminError.textContent =
+          (res.data && res.data.error) || "Create user failed.";
+        return;
+      }
+      document.getElementById("create-username").value = "";
+      document.getElementById("create-password").value = "";
+      loadUsers();
+    });
+  });
+
+  function renderUsers(users) {
+    usersBody.innerHTML = "";
+    for (var i = 0; i < users.length; i++) {
+      (function (user) {
+        var tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td>" +
+          escapeHtml(user.username) +
+          "</td><td>" +
+          escapeHtml(user.group_name || "") +
+          "</td><td>" +
+          (user.loginable ? "yes" : "no") +
+          '</td><td class="actions">' +
+          '<div class="inline-pwd">' +
+          '<input type="password" class="admin-pwd" placeholder="new password" minlength="8" />' +
+          '<button type="button" class="btn-set-pwd">set</button>' +
+          "</div></td>";
+        usersBody.appendChild(tr);
+        tr.querySelector(".btn-set-pwd").addEventListener("click", function () {
+          adminError.className = "error";
+          adminError.textContent = "";
+          var input = tr.querySelector(".admin-pwd");
+          var password = input.value;
+          if (password.length < 8) {
+            adminError.textContent = "Password must be at least 8 characters.";
+            return;
+          }
+          setPassword(user.username, password, adminError).then(function (res) {
+            if (!res) return;
+            input.value = "";
+            adminError.className = "ok";
+            adminError.textContent =
+              "Password updated for " +
+              user.username +
+              " (sessions expired).";
+            if (user.username === session.username) {
+              HVDAuth.clearSession();
+              window.location.replace("/?pwd=changed");
+            }
+          });
+        });
+      })(users[i]);
+    }
   }
 
   function hideOtherRowButtons(exceptRow) {
@@ -214,5 +379,6 @@
       .replace(/"/g, "&quot;");
   }
 
+  loadWhoami();
   load();
 })();

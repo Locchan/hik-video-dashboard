@@ -29,6 +29,52 @@
           <tbody id="config-body"></tbody>
         </table>
       </div>
+
+      <section class="panel" id="account-panel">
+        <h2>Account</h2>
+        <form id="self-password-form" class="card stack narrow">
+          <label>
+            New password
+            <input id="self-password" type="password" required minlength="8" autocomplete="new-password" />
+          </label>
+          <label>
+            Confirm password
+            <input id="self-password-confirm" type="password" required minlength="8" autocomplete="new-password" />
+          </label>
+          <p id="self-password-error" class="error" role="alert"></p>
+          <button type="submit">Change my password</button>
+        </form>
+      </section>
+
+      <section class="panel" id="admin-panel" hidden>
+        <h2>Users</h2>
+        <p id="admin-error" class="error" role="alert"></p>
+        <form id="create-user-form" class="card stack narrow" hidden>
+          <h3>Create user</h3>
+          <label>
+            Username
+            <input id="create-username" type="text" required minlength="4" autocomplete="off" />
+          </label>
+          <label>
+            Password
+            <input id="create-password" type="password" required minlength="8" autocomplete="new-password" />
+          </label>
+          <button type="submit">Create</button>
+        </form>
+        <div class="table-wrap" id="users-table-wrap" hidden>
+          <table class="config">
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Group</th>
+                <th>Loginable</th>
+                <th>Set password</th>
+              </tr>
+            </thead>
+            <tbody id="users-body"></tbody>
+          </table>
+        </div>
+      </section>
     </main>
     <script src="/js/auth.js"></script>
     <script src="/js/configuration.js"></script>

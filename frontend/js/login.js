@@ -7,7 +7,13 @@
     return;
   }
 
+  if (window.location.search.indexOf("pwd=changed") !== -1) {
+    errorEl.className = "ok";
+    errorEl.textContent = "Password updated. Sign in with your new password.";
+  }
+
   form.addEventListener("submit", function (ev) {
+    errorEl.className = "error";
     ev.preventDefault();
     errorEl.textContent = "";
     var username = document.getElementById("username").value.trim();
