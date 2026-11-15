@@ -48,6 +48,8 @@
       "app.title": "HIK Video Dashboard",
       "app.heading": "Home",
       "app.empty": "No feature panels are available yet. Use Configuration to manage the system.",
+      "app.section.alerts.desc": "Browse camera alert clips and play recordings.",
+      "app.section.configuration.desc": "Manage config entries, account, users, and feature flags.",
 
       "config.title": "Configuration — HIK Video Dashboard",
       "config.heading": "Configuration",
@@ -157,6 +159,8 @@
       "app.title": "HIK Video Dashboard",
       "app.heading": "Главная",
       "app.empty": "Панели функций пока недоступны. Управляйте системой через Настройки.",
+      "app.section.alerts.desc": "Просмотр тревог с камер и воспроизведение записей.",
+      "app.section.configuration.desc": "Записи конфигурации, аккаунт, пользователи и флаги функций.",
 
       "config.title": "Настройки — HIK Video Dashboard",
       "config.heading": "Настройки",

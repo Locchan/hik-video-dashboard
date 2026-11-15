@@ -1,5 +1,7 @@
 FROM docker.io/library/nginx:stable-alpine
 
+ARG VERSION=dev
+
 RUN rm -rf /usr/share/nginx/html/*
 
 COPY css /usr/share/nginx/html/css
@@ -9,6 +11,10 @@ COPY alerts /usr/share/nginx/html/alerts
 COPY app /usr/share/nginx/html/app
 COPY index.html /usr/share/nginx/html/index.html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Bake build version into a tiny JS global for the header.
+RUN printf 'window.HVD_VERSION = "%s";\n' "${VERSION}" \
+      > /usr/share/nginx/html/js/version.js
 
 EXPOSE 5482
 

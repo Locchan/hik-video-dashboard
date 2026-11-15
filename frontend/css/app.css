@@ -88,7 +88,14 @@ select {
 .site-brand {
   font-weight: 650;
   text-decoration: none;
-  margin-right: 0.5rem;
+  margin-right: 0.25rem;
+}
+
+.site-version {
+  font-size: 0.8rem;
+  color: #777;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  margin-right: 0.75rem;
 }
 
 .site-nav {
@@ -96,6 +103,36 @@ select {
   flex-wrap: wrap;
   gap: 0.35rem;
   flex: 1;
+}
+
+.home-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.home-section-link {
+  display: block;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--ui-border);
+  text-decoration: none;
+  color: inherit;
+}
+
+.home-section-link:hover .home-section-title {
+  text-decoration: underline;
+}
+
+.home-section-title {
+  display: block;
+  font-weight: 650;
+  font-size: 1.05rem;
+}
+
+.home-section-desc {
+  display: block;
+  margin-top: 0.25rem;
 }
 
 .site-nav-link {
