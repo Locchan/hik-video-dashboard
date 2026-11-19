@@ -21,6 +21,7 @@
   var entries = [];
   var mode = null; // null | "edit" | "delete" | "create"
   var activeName = null;
+  var activeGroupRead = null;
   var capabilities = [];
   var isAdmin = false;
   var canCreate = false;
@@ -29,10 +30,24 @@
 
   var session = HVDAuth.getSession();
 
+  function isActiveEntry(entry) {
+    return (
+      activeName === entry.name &&
+      (activeGroupRead == null || activeGroupRead === entry.group_read)
+    );
+  }
+
+  function ownerLabel(entry) {
+    if (entry.group_name) return entry.group_name;
+    if (entry.group_read != null) return "#" + entry.group_read;
+    return "";
+  }
+
   newBtn.addEventListener("click", function () {
     if (mode || !configFeatureOn) return;
     mode = "create";
     activeName = null;
+    activeGroupRead = null;
     render();
   });
 
@@ -44,14 +59,27 @@
     return capabilities.indexOf(cap) !== -1;
   }
 
-  function validatePair(name, value, excludeName) {
+  function validatePair(name, value, excludeEntry) {
     name = (name || "").trim();
     value = (value || "").trim();
     if (!name) return HVDi18n.t("config.key_empty");
     if (!value) return HVDi18n.t("config.value_empty");
     for (var i = 0; i < entries.length; i++) {
-      if (excludeName && entries[i].name === excludeName) continue;
-      if (entries[i].name === name) {
+      var other = entries[i];
+      if (other.name !== name) continue;
+      if (
+        excludeEntry &&
+        other.name === excludeEntry.name &&
+        other.group_read === excludeEntry.group_read
+      ) {
+        continue;
+      }
+      // Creates land in the caller's personal group (named after the username).
+      if (excludeEntry) {
+        if (other.group_read === excludeEntry.group_read) {
+          return HVDi18n.t("config.key_exists");
+        }
+      } else if (!session.username || other.group_name === session.username) {
         return HVDi18n.t("config.key_exists");
       }
     }
@@ -68,10 +96,15 @@
   }
 
   function findLanguageEntry() {
+    var fallback = null;
     for (var i = 0; i < entries.length; i++) {
-      if (entries[i].name === "language") return entries[i];
+      if (entries[i].name !== "language") continue;
+      if (session.username && entries[i].group_name === session.username) {
+        return entries[i];
+      }
+      if (!fallback) fallback = entries[i];
     }
-    return null;
+    return fallback;
   }
 
   function syncLanguageSelect() {
@@ -97,6 +130,9 @@
       encodeURIComponent("language") +
       "&value=" +
       encodeURIComponent(ui);
+    if (entry && entry.group_read != null) {
+      q += "&group_read=" + encodeURIComponent(entry.group_read);
+    }
     var method = entry ? "UPDATE" : "PUT";
     return HVDAuth.api(q, { method: method }).then(function (res) {
       languageSaving = false;
@@ -222,6 +258,7 @@
       entries = (res.data && res.data.entries) || [];
       mode = null;
       activeName = null;
+      activeGroupRead = null;
       syncLanguageSelect();
       render();
     });
@@ -381,6 +418,9 @@
         '<td><input class="cell" id="new-value" type="text" placeholder="' +
         escapeHtml(HVDi18n.t("config.placeholder.value")) +
         '"></td>' +
+        "<td>" +
+        escapeHtml(session.username || "") +
+        '</td>' +
         '<td class="actions"><button type="button" id="new-submit">' +
         escapeHtml(HVDi18n.t("config.submit")) +
         "</button></td>";
@@ -414,8 +454,8 @@
     for (var i = 0; i < entries.length; i++) {
       (function (entry) {
         var tr = document.createElement("tr");
-        var isEdit = mode === "edit" && activeName === entry.name;
-        var isDelete = mode === "delete" && activeName === entry.name;
+        var isEdit = mode === "edit" && isActiveEntry(entry);
+        var isDelete = mode === "delete" && isActiveEntry(entry);
         var showActions = !mode || isEdit || isDelete;
 
         var valueCell = isEdit
@@ -448,6 +488,8 @@
           escapeHtml(entry.name) +
           "</td><td>" +
           valueCell +
+          "</td><td>" +
+          escapeHtml(ownerLabel(entry)) +
           '</td><td class="actions">' +
           actionsHtml +
           "</td>";
@@ -466,6 +508,7 @@
           editBtn.addEventListener("click", function () {
             mode = "edit";
             activeName = entry.name;
+            activeGroupRead = entry.group_read;
             render();
             hideOtherRowButtons(tr);
           });
@@ -474,6 +517,7 @@
           deleteBtn.addEventListener("click", function () {
             mode = "delete";
             activeName = entry.name;
+            activeGroupRead = entry.group_read;
             render();
             hideOtherRowButtons(tr);
           });
@@ -481,7 +525,7 @@
         if (submitBtn) {
           submitBtn.addEventListener("click", function () {
             var value = tr.querySelector(".edit-value").value;
-            var err = validatePair(entry.name, value, entry.name);
+            var err = validatePair(entry.name, value, entry);
             if (err) {
               setError(err);
               return;
@@ -491,7 +535,9 @@
               "/api/config?entry_name=" +
               encodeURIComponent(entry.name) +
               "&value=" +
-              encodeURIComponent(value.trim());
+              encodeURIComponent(value.trim()) +
+              "&group_read=" +
+              encodeURIComponent(entry.group_read);
             HVDAuth.api(q, { method: "UPDATE" }).then(function (res) {
               if (!res.ok) {
                 setError(
@@ -507,7 +553,10 @@
         if (confirmBtn) {
           confirmBtn.addEventListener("click", function () {
             var q =
-              "/api/config?entry_name=" + encodeURIComponent(entry.name);
+              "/api/config?entry_name=" +
+              encodeURIComponent(entry.name) +
+              "&group_read=" +
+              encodeURIComponent(entry.group_read);
             HVDAuth.api(q, { method: "DELETE" }).then(function (res) {
               if (!res.ok) {
                 setError(
