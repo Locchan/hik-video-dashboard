@@ -83,6 +83,46 @@
     return groups;
   }
 
+  var thumbObserver = null;
+
+  function resetThumbObserver() {
+    if (thumbObserver) {
+      thumbObserver.disconnect();
+      thumbObserver = null;
+    }
+  }
+
+  function ensureThumbObserver() {
+    if (thumbObserver) return thumbObserver;
+    if (typeof IntersectionObserver === "undefined") return null;
+    thumbObserver = new IntersectionObserver(
+      function (entries) {
+        for (var i = 0; i < entries.length; i++) {
+          var entry = entries[i];
+          if (!entry.isIntersecting) continue;
+          var box = entry.target;
+          thumbObserver.unobserve(box);
+          var load = box._loadThumb;
+          box._loadThumb = null;
+          if (typeof load === "function") load();
+        }
+      },
+      // Small margin so thumbs start just before they scroll into view.
+      { root: null, rootMargin: "80px 0px", threshold: 0.01 }
+    );
+    return thumbObserver;
+  }
+
+  function scheduleThumb(box, loadFn) {
+    var obs = ensureThumbObserver();
+    if (!obs) {
+      loadFn();
+      return;
+    }
+    box._loadThumb = loadFn;
+    obs.observe(box);
+  }
+
   function makeBox(alert, date) {
     var box = document.createElement("article");
     box.className = "alert-box is-loading";
@@ -126,11 +166,14 @@
     box.appendChild(media);
     box.appendChild(meta);
 
-    loadThumb(alert.video_id, box, img, play, err, spinner);
+    scheduleThumb(box, function () {
+      loadThumb(alert.video_id, box, img, play, err, spinner);
+    });
     return box;
   }
 
   function renderAlerts(alerts) {
+    resetThumbObserver();
     listEl.innerHTML = "";
     var groups = groupAlerts(alerts);
     emptyEl.hidden = groups.length > 0;
