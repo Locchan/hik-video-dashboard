@@ -274,22 +274,58 @@
     err.hidden = false;
     box.classList.remove("is-loading", "is-ready");
     box.classList.add("is-error");
+    if (img._objectUrl) {
+      URL.revokeObjectURL(img._objectUrl);
+      img._objectUrl = null;
+    }
+  }
+
+  function showThumbReady(box, img, play, err, spinner) {
+    spinner.hidden = true;
+    img.hidden = false;
+    play.hidden = false;
+    err.hidden = true;
+    box.classList.remove("is-loading", "is-error");
+    box.classList.add("is-ready");
   }
 
   function loadThumb(videoId, box, img, play, err, spinner) {
     if (!HVDAuth.getSession()) return;
-    img.onload = function () {
-      spinner.hidden = true;
-      img.hidden = false;
-      play.hidden = false;
-      err.hidden = true;
-      box.classList.remove("is-loading", "is-error");
-      box.classList.add("is-ready");
-    };
-    img.onerror = function () {
-      showThumbError(box, img, play, err, spinner);
-    };
-    img.src = "/api/thumbnail?video=" + encodeURIComponent(videoId);
+    var url = "/api/thumbnail?video=" + encodeURIComponent(videoId);
+    // Fetch the full PNG first so the <img> never paints a progressive partial.
+    fetch(url, { credentials: "same-origin" })
+      .then(function (resp) {
+        if (resp.status === 401) {
+          HVDAuth.clearSession();
+          window.location.replace("/");
+          return null;
+        }
+        if (!resp.ok) throw new Error("thumb " + resp.status);
+        return resp.blob();
+      })
+      .then(function (blob) {
+        if (!blob) return;
+        if (img._objectUrl) URL.revokeObjectURL(img._objectUrl);
+        var objectUrl = URL.createObjectURL(blob);
+        img._objectUrl = objectUrl;
+        function reveal() {
+          showThumbReady(box, img, play, err, spinner);
+        }
+        img.onerror = function () {
+          showThumbError(box, img, play, err, spinner);
+        };
+        img.onload = function () {
+          if (typeof img.decode === "function") {
+            img.decode().then(reveal).catch(reveal);
+          } else {
+            reveal();
+          }
+        };
+        img.src = objectUrl;
+      })
+      .catch(function () {
+        showThumbError(box, img, play, err, spinner);
+      });
   }
 
   HVDAuth.api("/api/auth/whoami")

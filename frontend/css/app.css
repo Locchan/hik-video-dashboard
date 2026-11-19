@@ -248,6 +248,11 @@ select {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  /* Keep hidden while downloading; display:block would override [hidden]. */
+  display: none;
+}
+
+.alert-box.is-ready .alert-box-media .alert-thumb {
   display: block;
 }
 
