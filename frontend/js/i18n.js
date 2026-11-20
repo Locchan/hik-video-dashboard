@@ -19,6 +19,8 @@
       "header.brand": "HIK Video Dashboard",
       "header.nav.configuration": "Configuration",
       "header.nav.alerts": "Alerts",
+      "header.nav.streaming": "Streaming",
+      "header.nav.help": "Help",
       "header.logout": "Log out",
       "footer.backend": "backend",
       "footer.frontend": "frontend",
@@ -53,7 +55,20 @@
       "app.heading": "Home",
       "app.empty": "No feature panels are available yet. Use Configuration to manage the system.",
       "app.section.alerts.desc": "Browse camera alert clips and play recordings.",
+      "app.section.streaming.desc": "Watch live channels from configured DVRs over MPEG-TS.",
       "app.section.configuration.desc": "Manage config entries, account, users, and feature flags.",
+
+      "streaming.title": "Streaming — HIK Video Dashboard",
+      "streaming.heading": "Live streaming",
+      "streaming.refresh": "Refresh",
+      "streaming.empty": "No DVRs configured.",
+      "streaming.hint": "Open one channel at a time. Stream stops after 30s if this tab is hidden.",
+      "streaming.no_channels": "No channels available from this DVR.",
+      "streaming.load_failed": "Failed to load channels.",
+      "streaming.disabled": "The streaming feature is disabled.",
+      "streaming.connecting": "Connecting…",
+      "streaming.stream_failed": "Could not play stream.",
+      "streaming.player_unsupported": "Live MPEG-TS playback is not supported in this browser.",
 
       "config.title": "Configuration — HIK Video Dashboard",
       "config.heading": "Configuration",
@@ -71,6 +86,7 @@
       "config.edit": "edit",
       "config.delete": "delete",
       "config.confirm": "confirm",
+      "config.discard": "discard",
       "config.load_failed": "Failed to load config.",
       "config.create_failed": "Create failed.",
       "config.update_failed": "Update failed.",
@@ -119,6 +135,37 @@
       "feature.CONFIG.desc": "Group configuration key/value store and editor.",
       "feature.ALERT_VIEW.title": "Alerts",
       "feature.ALERT_VIEW.desc": "Browse camera alert clips with nearest-snap thumbnails.",
+      "feature.STREAMING.title": "Streaming",
+      "feature.STREAMING.desc": "Live DVR channels via MPEG-TS WebSocket (STREAMING_DVR_X_HTTP_ADDR / RTSP_ADDR).",
+
+      "help.title": "Help — HIK Video Dashboard",
+      "help.heading": "Help",
+      "help.intro": "Feature overview and configuration keys. Open a section for details.",
+      "help.options_heading": "Configuration",
+      "help.no_options": "No user-facing config keys for this feature.",
+      "help.badge.env": "env",
+      "help.CONFIG.body":
+        "Enables the configuration window: per-group key/value entries with read/write ACL, account language, and (for admins) user management and feature toggles. Entries created by a user belong to that user's personal group.",
+      "help.CONFIG.opt.language":
+        "UI language for the owner's group. Values: en, ru. Set from Account on the Configuration page (or created automatically on first login).",
+      "help.ALERT_VIEW.body":
+        "Alerts page lists camera alert clips discovered under the server alerts directory, with nearest-snap thumbnails and in-browser playback. No per-user config keys; the path is set by the server environment.",
+      "help.ALERT_VIEW.opt.ALERTS_DIR":
+        "Server environment variable: filesystem path to the alerts tree (clip + snap folders). Not a config-table entry.",
+      "help.STREAMING.body":
+        "Live view from Hikvision DVRs. Register each DVR with HTTP (ISAPI channel list) and RTSP addresses, then open channels on the Streaming page (MPEG-TS over WebSocket via ffmpeg copy remux). DVR keys are usually owned by root so normal users can stream without reading secrets.",
+      "help.STREAMING.opt.NAME":
+        "Optional display name for DVR X (shown in the Streaming UI).",
+      "help.STREAMING.opt.HTTP_ADDR":
+        "HTTP(S) address of DVR X for ISAPI (e.g. 192.0.2.10 or http://host:80). Used by GET /streaming/channels.",
+      "help.STREAMING.opt.RTSP_ADDR":
+        "RTSP address of DVR X for live video (e.g. 192.0.2.11 or host:554). Used by the stream WebSocket.",
+      "help.STREAMING.opt.USERNAME":
+        "Digest/RTSP username for DVR X.",
+      "help.STREAMING.opt.PASSWORD":
+        "Digest/RTSP password for DVR X (never returned by the API).",
+      "help.STREAMING.opt.CH_NAME":
+        "Optional display name for channel Y on DVR X. If unset, the channel id is shown.",
     },
     ru: {
       "login.title": "Вход — HIK Video Dashboard",
@@ -135,6 +182,8 @@
       "header.brand": "HIK Video Dashboard",
       "header.nav.configuration": "Настройки",
       "header.nav.alerts": "Сработки",
+      "header.nav.streaming": "Трансляция",
+      "header.nav.help": "Справка",
       "header.logout": "Выйти",
       "footer.backend": "backend",
       "footer.frontend": "frontend",
@@ -169,7 +218,20 @@
       "app.heading": "Главная",
       "app.empty": "Панели функций пока недоступны. Управляйте системой через Настройки.",
       "app.section.alerts.desc": "Просмотр сработок с камер и воспроизведение записей.",
+      "app.section.streaming.desc": "Прямой просмотр каналов DVR через MPEG-TS.",
       "app.section.configuration.desc": "Записи конфигурации, аккаунт, пользователи и флаги функций.",
+
+      "streaming.title": "Трансляция — HIK Video Dashboard",
+      "streaming.heading": "Прямая трансляция",
+      "streaming.refresh": "Обновить",
+      "streaming.empty": "DVR не настроены.",
+      "streaming.hint": "Открыт может быть только один канал. Поток остановится через 30 с, если вкладка скрыта.",
+      "streaming.no_channels": "У этого DVR нет доступных каналов.",
+      "streaming.load_failed": "Не удалось загрузить каналы.",
+      "streaming.disabled": "Функция трансляции отключена.",
+      "streaming.connecting": "Подключение…",
+      "streaming.stream_failed": "Не удалось воспроизвести поток.",
+      "streaming.player_unsupported": "Этот браузер не поддерживает живой MPEG-TS.",
 
       "config.title": "Настройки — HIK Video Dashboard",
       "config.heading": "Настройки",
@@ -187,6 +249,7 @@
       "config.edit": "изменить",
       "config.delete": "удалить",
       "config.confirm": "подтвердить",
+      "config.discard": "отменить",
       "config.load_failed": "Не удалось загрузить настройки.",
       "config.create_failed": "Не удалось создать.",
       "config.update_failed": "Не удалось обновить.",
@@ -235,6 +298,37 @@
       "feature.CONFIG.desc": "Хранилище и редактор ключей конфигурации группы.",
       "feature.ALERT_VIEW.title": "Сработки",
       "feature.ALERT_VIEW.desc": "Просмотр клипов сработок с ближайшими снимками.",
+      "feature.STREAMING.title": "Трансляция",
+      "feature.STREAMING.desc": "Каналы DVR через WebSocket MPEG-TS (STREAMING_DVR_X_HTTP_ADDR / RTSP_ADDR).",
+
+      "help.title": "Справка — HIK Video Dashboard",
+      "help.heading": "Справка",
+      "help.intro": "Обзор функций и ключей конфигурации. Откройте раздел для подробностей.",
+      "help.options_heading": "Конфигурация",
+      "help.no_options": "У этой функции нет пользовательских ключей конфигурации.",
+      "help.badge.env": "env",
+      "help.CONFIG.body":
+        "Включает окно настроек: ключи конфигурации с ACL группы, язык аккаунта и (для админов) пользователей и флаги функций. Записи пользователя принадлежат его персональной группе.",
+      "help.CONFIG.opt.language":
+        "Язык интерфейса для группы владельца. Значения: en, ru. Задаётся в разделе Аккаунт на странице Настроек (или при первом входе).",
+      "help.ALERT_VIEW.body":
+        "Страница сработок показывает клипы из каталога алертов на сервере, миниатюры ближайших снимков и воспроизведение в браузере. Пользовательских ключей нет — путь задаётся окружением сервера.",
+      "help.ALERT_VIEW.opt.ALERTS_DIR":
+        "Переменная окружения сервера: путь к дереву алертов (клипы и снимки). Не запись таблицы config.",
+      "help.STREAMING.body":
+        "Прямой просмотр с DVR Hikvision. Для каждого DVR задайте HTTP (ISAPI список каналов) и RTSP, затем открывайте каналы на странице Трансляция (MPEG-TS по WebSocket через ffmpeg copy). Ключи DVR обычно принадлежат root, чтобы обычные пользователи могли смотреть поток без доступа к секретам.",
+      "help.STREAMING.opt.NAME":
+        "Необязательное отображаемое имя DVR X в интерфейсе трансляции.",
+      "help.STREAMING.opt.HTTP_ADDR":
+        "HTTP(S)-адрес DVR X для ISAPI (например 192.0.2.10 или http://host:80). Используется GET /streaming/channels.",
+      "help.STREAMING.opt.RTSP_ADDR":
+        "RTSP-адрес DVR X для живого видео (например 192.0.2.11 или host:554). Используется WebSocket потока.",
+      "help.STREAMING.opt.USERNAME":
+        "Имя пользователя Digest/RTSP для DVR X.",
+      "help.STREAMING.opt.PASSWORD":
+        "Пароль Digest/RTSP для DVR X (API его не возвращает).",
+      "help.STREAMING.opt.CH_NAME":
+        "Необязательное имя канала Y на DVR X. Если не задано, показывается id канала.",
     },
   };
 

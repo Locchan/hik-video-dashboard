@@ -3,9 +3,11 @@ FROM python:3.12-alpine
 ARG VERSION=dev
 ENV HVD_VERSION=${VERSION}
 
+# ffmpeg/ffprobe: live RTSP → MPEG-TS remux + camera online probes (STREAMING feature).
 # No apk build toolchain (build-base/cargo/dev headers). Runtime deps are
 # purest (stdlib scrypt) + SQLAlchemy / psycopg2-binary / Pillow wheels.
-RUN pip install --no-cache-dir "poetry>=1.8,<2.2"
+RUN apk add --no-cache ffmpeg \
+ && pip install --no-cache-dir "poetry>=1.8,<2.2"
 
 # Build context = hik-video-dashboard repo root (with purest submodule).
 WORKDIR /src

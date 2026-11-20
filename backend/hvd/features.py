@@ -26,6 +26,7 @@ class FeatureDef:
 
 FEAT_CONFIG = "CONFIG"
 FEAT_ALERT_VIEW = "ALERT_VIEW"
+FEAT_STREAMING = "STREAMING"
 
 FEATURES: dict[str, FeatureDef] = {
     FEAT_CONFIG: FeatureDef(
@@ -43,6 +44,14 @@ FEATURES: dict[str, FeatureDef] = {
             "in the Alerts page."
         ),
         default_enabled=True,
+    ),
+    FEAT_STREAMING: FeatureDef(
+        name=FEAT_STREAMING,
+        description=(
+            "Live view from Hikvision DVRs: STREAMING_DVR_X_HTTP_ADDR (ISAPI) + "
+            "RTSP_ADDR (stream), MPEG-TS over WebSocket (ffmpeg copy remux)."
+        ),
+        default_enabled=False,
     ),
 }
 

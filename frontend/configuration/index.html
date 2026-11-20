@@ -11,9 +11,6 @@
     <main class="wrap">
       <div class="topbar">
         <h1 data-i18n="config.heading">Configuration</h1>
-        <div class="actions">
-          <button type="button" id="btn-new" data-i18n="config.new" hidden>New entry</button>
-        </div>
       </div>
       <p id="page-error" class="error" role="alert"></p>
       <p id="config-disabled" class="muted" data-i18n="config.disabled" hidden>
@@ -38,7 +35,10 @@
       </section>
 
       <section class="section-box" id="config-section" hidden>
-        <h2 data-i18n="config.entries.heading">Config entries</h2>
+        <div class="section-heading">
+          <h2 data-i18n="config.entries.heading">Config entries</h2>
+          <button type="button" id="btn-new" data-i18n="config.new" hidden>New entry</button>
+        </div>
         <div class="table-wrap">
           <table class="config">
             <thead>

@@ -1,0 +1,10 @@
+mpegts.js
+Version: 1.8.2
+Upstream: https://github.com/xqq/mpegts.js
+License: Apache License 2.0 (see LICENSE in this directory)
+
+Copyright (C) 2021 magicxqq. All Rights Reserved.
+
+This product includes software developed from the mpegts.js project.
+The minified/browser build was taken from the npm package mpegts.js@1.8.2
+(corresponding to GitHub tag v1.8.2).

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title data-i18n="streaming.title">Streaming — HIK Video Dashboard</title>
+    <link rel="stylesheet" href="/css/app.css" />
+  </head>
+  <body>
+    <div id="site-header"></div>
+    <main class="wrap">
+      <div class="topbar">
+        <h1 data-i18n="streaming.heading">Live streaming</h1>
+        <div class="actions">
+          <button type="button" id="btn-refresh" class="btn" data-i18n="streaming.refresh">
+            Refresh
+          </button>
+        </div>
+      </div>
+      <p id="streaming-error" class="error" role="alert"></p>
+      <p id="streaming-empty" class="muted" data-i18n="streaming.empty" hidden>
+        No DVRs configured.
+      </p>
+      <p id="streaming-hint" class="muted" data-i18n="streaming.hint" hidden></p>
+      <div id="camera-list" class="camera-accordion" aria-live="polite"></div>
+    </main>
+    <div id="site-footer"></div>
+    <script src="/js/version.js"></script>
+    <script src="/js/i18n.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/features.js"></script>
+    <script src="/js/footer.js"></script>
+    <script src="/js/header.js"></script>
+    <script src="/vendor/mpegts.js/mpegts.min.js"></script>
+    <script src="/js/streaming.js"></script>
+  </body>
+</html>

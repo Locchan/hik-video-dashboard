@@ -6,6 +6,9 @@ FROM hvd:latest
 ARG VERSION=dev
 ENV HVD_VERSION=${VERSION}
 
+# Ensure ffmpeg exists even when upgrading from an older hvd:latest without it.
+RUN apk add --no-cache ffmpeg
+
 WORKDIR /src
 COPY purest /src/purest
 COPY backend /src/backend

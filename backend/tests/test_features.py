@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from http.client import HTTPConnection
 
-from hvd.features import FEAT_ALERT_VIEW, FEAT_CONFIG
+from hvd.features import FEAT_ALERT_VIEW, FEAT_CONFIG, FEAT_STREAMING
 from purest.auth.policy import DEFAULT_ROOT_PASSWORD
 from sqlalchemy import inspect
 
@@ -45,7 +45,9 @@ def test_features_table_seeded(hvd_app):
     feats = {f["name"]: f for f in app_db.feature_store.list_features()}
     assert FEAT_CONFIG in feats
     assert FEAT_ALERT_VIEW in feats
+    assert FEAT_STREAMING in feats
     assert feats[FEAT_CONFIG]["enabled"] is True
+    assert feats[FEAT_STREAMING]["enabled"] is False
 
 
 def test_features_list_and_admin_toggle(hvd_app):

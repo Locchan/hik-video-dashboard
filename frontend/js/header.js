@@ -1,7 +1,7 @@
 (function (global) {
   /**
    * Mount shared app header into #site-header.
-   * options.active: "app" | "configuration" | "alerts"
+   * options.active: "app" | "configuration" | "alerts" | "streaming" | "help"
    */
   function mount(options) {
     options = options || {};
@@ -12,6 +12,7 @@
     var username = session ? session.username : "";
     var showConfig = !HVDFeatures || HVDFeatures.isEnabled("CONFIG");
     var showAlerts = !HVDFeatures || HVDFeatures.isEnabled("ALERT_VIEW");
+    var showStreaming = !HVDFeatures || HVDFeatures.isEnabled("STREAMING");
 
     host.innerHTML =
       '<header class="site-header">' +
@@ -42,9 +43,13 @@
     if (showAlerts) {
       addNav("/alerts/", "header.nav.alerts", "alerts");
     }
+    if (showStreaming) {
+      addNav("/streaming/", "header.nav.streaming", "streaming");
+    }
     if (showConfig) {
       addNav("/configuration/", "header.nav.configuration", "configuration");
     }
+    addNav("/help/", "header.nav.help", "help");
 
     host.querySelector("#header-user").textContent = username;
     host.querySelector("#header-logout").addEventListener("click", function () {
@@ -65,6 +70,13 @@
         href: "/alerts/",
         titleKey: "header.nav.alerts",
         descKey: "app.section.alerts.desc",
+      });
+    }
+    if (!HVDFeatures || HVDFeatures.isEnabled("STREAMING")) {
+      items.push({
+        href: "/streaming/",
+        titleKey: "header.nav.streaming",
+        descKey: "app.section.streaming.desc",
       });
     }
     if (!HVDFeatures || HVDFeatures.isEnabled("CONFIG")) {

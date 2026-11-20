@@ -177,7 +177,11 @@
         var desc = HVDFeatures.description(feature);
         tr.innerHTML =
           "<td>" +
+          '<a class="feature-help-link" href="/help/#feature-' +
+          encodeURIComponent(feature.name) +
+          '">' +
           escapeHtml(title) +
+          "</a>" +
           ' <span class="muted">(' +
           escapeHtml(feature.name) +
           ")</span></td><td>" +
@@ -394,14 +398,20 @@
     }
   }
 
-  function hideOtherRowButtons(exceptRow) {
-    var rows = tbody.querySelectorAll("tr");
-    for (var i = 0; i < rows.length; i++) {
-      if (rows[i] === exceptRow) continue;
-      var actions = rows[i].querySelector(".actions");
-      if (actions) actions.innerHTML = "";
-    }
-    newBtn.disabled = true;
+  function discardActive() {
+    mode = null;
+    activeName = null;
+    activeGroupRead = null;
+    setError("");
+    render();
+  }
+
+  function discardButtonHtml() {
+    return (
+      '<button type="button" class="btn-discard">' +
+      escapeHtml(HVDi18n.t("config.discard")) +
+      "</button>"
+    );
   }
 
   function render() {
@@ -421,9 +431,12 @@
         "<td>" +
         escapeHtml(session.username || "") +
         '</td>' +
-        '<td class="actions"><button type="button" id="new-submit">' +
+        '<td class="actions"><div class="action-pair">' +
+        '<button type="button" id="new-submit">' +
         escapeHtml(HVDi18n.t("config.submit")) +
-        "</button></td>";
+        "</button>" +
+        discardButtonHtml() +
+        "</div></td>";
       tbody.appendChild(createRow);
       createRow.querySelector("#new-submit").addEventListener("click", function () {
         var key = createRow.querySelector("#new-key").value;
@@ -449,6 +462,7 @@
           window.location.reload();
         });
       });
+      createRow.querySelector(".btn-discard").addEventListener("click", discardActive);
     }
 
     for (var i = 0; i < entries.length; i++) {
@@ -458,9 +472,10 @@
         var isDelete = mode === "delete" && isActiveEntry(entry);
         var showActions = !mode || isEdit || isDelete;
 
+        // Always render an input so the value column does not reflow on edit.
         var valueCell = isEdit
           ? '<input class="cell edit-value" type="text">'
-          : escapeHtml(entry.value);
+          : '<input class="cell value-display" type="text" readonly tabindex="-1">';
 
         var actionsHtml = "";
         if (showActions && !mode) {
@@ -475,12 +490,14 @@
           actionsHtml =
             '<button type="button" class="btn-submit">' +
             escapeHtml(HVDi18n.t("config.submit")) +
-            "</button>";
+            "</button>" +
+            discardButtonHtml();
         } else if (isDelete) {
           actionsHtml =
             '<button type="button" class="btn-confirm">' +
             escapeHtml(HVDi18n.t("config.confirm")) +
-            "</button>";
+            "</button>" +
+            discardButtonHtml();
         }
 
         tr.innerHTML =
@@ -490,27 +507,27 @@
           valueCell +
           "</td><td>" +
           escapeHtml(ownerLabel(entry)) +
-          '</td><td class="actions">' +
+          '</td><td class="actions"><div class="action-pair">' +
           actionsHtml +
-          "</td>";
+          "</div></td>";
         tbody.appendChild(tr);
 
-        if (isEdit) {
-          tr.querySelector(".edit-value").value = entry.value;
-        }
+        var valueInput = tr.querySelector(".edit-value, .value-display");
+        if (valueInput) valueInput.value = entry.value;
 
         var editBtn = tr.querySelector(".btn-edit");
         var deleteBtn = tr.querySelector(".btn-delete");
         var submitBtn = tr.querySelector(".btn-submit");
         var confirmBtn = tr.querySelector(".btn-confirm");
+        var discardBtn = tr.querySelector(".btn-discard");
 
         if (editBtn) {
           editBtn.addEventListener("click", function () {
             mode = "edit";
             activeName = entry.name;
             activeGroupRead = entry.group_read;
+            setError("");
             render();
-            hideOtherRowButtons(tr);
           });
         }
         if (deleteBtn) {
@@ -518,8 +535,8 @@
             mode = "delete";
             activeName = entry.name;
             activeGroupRead = entry.group_read;
+            setError("");
             render();
-            hideOtherRowButtons(tr);
           });
         }
         if (submitBtn) {
@@ -568,6 +585,9 @@
               window.location.reload();
             });
           });
+        }
+        if (discardBtn) {
+          discardBtn.addEventListener("click", discardActive);
         }
       })(entries[i]);
     }

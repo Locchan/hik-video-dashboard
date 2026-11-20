@@ -8,8 +8,10 @@ RUN rm -rf /usr/share/nginx/html/*
 COPY VERSION /usr/share/nginx/html/VERSION
 COPY css /usr/share/nginx/html/css
 COPY js /usr/share/nginx/html/js
+COPY vendor /usr/share/nginx/html/vendor
 COPY configuration /usr/share/nginx/html/configuration
 COPY alerts /usr/share/nginx/html/alerts
+COPY streaming /usr/share/nginx/html/streaming
 COPY app /usr/share/nginx/html/app
 COPY index.html /usr/share/nginx/html/index.html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
