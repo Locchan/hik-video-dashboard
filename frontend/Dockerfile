@@ -12,6 +12,7 @@ COPY vendor /usr/share/nginx/html/vendor
 COPY configuration /usr/share/nginx/html/configuration
 COPY alerts /usr/share/nginx/html/alerts
 COPY streaming /usr/share/nginx/html/streaming
+COPY help /usr/share/nginx/html/help
 COPY app /usr/share/nginx/html/app
 COPY index.html /usr/share/nginx/html/index.html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
