@@ -799,6 +799,8 @@ label.show-password input[type="checkbox"] {
 }
 
 .camera-panel-body {
+  position: relative;
+  overflow: visible;
   padding: 0.75rem;
   background: #111;
 }
@@ -813,6 +815,115 @@ label.show-password input[type="checkbox"] {
   width: 100%;
   max-height: 70vh;
   background: #000;
+  cursor: pointer;
+}
+
+.stream-play-pause {
+  margin-top: 0.45rem;
+  padding: 0.35rem 0.75rem;
+}
+
+.stream-mode-block {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+}
+
+.stream-view-label {
+  font-size: 0.8rem;
+  color: #aaa;
+}
+
+.stream-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.stream-toolbar .playback-now {
+  margin-left: auto;
+  align-self: center;
+  font-size: 0.9rem;
+  color: #ccc;
+}
+
+.stream-mode-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.stream-toolbar .btn {
+  padding: 0.35rem 0.65rem;
+}
+
+.stream-calendar-panel {
+  position: absolute;
+  z-index: 50;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  margin: 0;
+  padding: 0.65rem;
+  border: 1px solid #555;
+  background: #141414;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+}
+
+.stream-calendar-panel[hidden] {
+  display: none !important;
+}
+
+.stream-calendar-host .flatpickr-calendar {
+  position: static !important;
+  top: auto !important;
+  left: auto !important;
+  margin: 0 auto;
+  box-shadow: none !important;
+}
+
+.stream-calendar-host .flatpickr-input,
+.stream-calendar-host input.playback-start {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  border: 0 !important;
+}
+
+.stream-calendar-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.55rem;
+}
+
+/* flatpickr: days with recordings vs holes (disabled). */
+.flatpickr-day:not(.flatpickr-disabled):not(.prevMonthDay):not(.nextMonthDay) {
+  color: #b8f0c8;
+  border-color: #2a5a3a;
+  background: #1a3322;
+}
+
+.flatpickr-day.flatpickr-disabled,
+.flatpickr-day.prevMonthDay,
+.flatpickr-day.nextMonthDay {
+  color: #666 !important;
+  background: #2a2a2a !important;
+  border-color: transparent !important;
+}
+
+.camera-stream-status.stream-no-data {
+  color: #ffb4b4;
+  font-weight: 650;
+  background: #3a1515;
+  border: 1px solid #a44;
+  padding: 0.5rem 0.65rem;
 }
 
 @media (max-width: 720px) {

@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import re
+import uuid
 import xml.etree.ElementTree as ET
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime, timedelta
 from typing import Callable
 from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, quote, urlsplit
@@ -24,9 +26,17 @@ DVR_KEY_RE = re.compile(
 CH_NAME_RE = re.compile(r"^STREAMING_DVR_([^_]+)_CH_([^_]+)_NAME$")
 
 ISAPI_TIMEOUT_S = 3.0
+ISAPI_SEARCH_TIMEOUT_S = 15.0
 DEFAULT_HTTP_PORT = 80
 DEFAULT_RTSP_PORT = 554
 _ISAPI_DEBUG_BODY_LIMIT = 16384
+# Hikvision playback window when only start is given (NVR local clock, Z suffix).
+DEFAULT_PLAYBACK_WINDOW = timedelta(hours=24)
+# Archive bounds for datetime-local min/max (ignore holes inside the span).
+DEFAULT_RECORDING_LOOKBACK_DAYS = 365
+RECORDING_SEARCH_PAGE_SIZE = 100
+RECORDING_SEARCH_MAX_PAGES = 40
+_START_TZ_SUFFIX = re.compile(r"(Z|[+-]\d{2}:?\d{2})$", re.IGNORECASE)
 
 
 def _local(tag: str) -> str:
@@ -129,6 +139,76 @@ def _rtsp_host_port(
     return host, parsed.port or default_port
 
 
+def _isapi_request(
+    addr: str,
+    username: str,
+    password: str,
+    path: str,
+    *,
+    method: str = "GET",
+    data: bytes | None = None,
+    content_type: str | None = None,
+    timeout_s: float = ISAPI_TIMEOUT_S,
+    logger=None,
+) -> bytes:
+    """Digest-auth ISAPI call → response body bytes. path is absolute on the device."""
+    base = _http_base(addr)
+    url = f"{base}{path}"
+    pwd_mgr = HTTPPasswordMgrWithDefaultRealm()
+    pwd_mgr.add_password(None, base, username or "", password or "")
+    opener = build_opener(HTTPDigestAuthHandler(pwd_mgr))
+    headers = {"Accept": "application/xml"}
+    if content_type:
+        headers["Content-Type"] = content_type
+    req = Request(url, data=data, method=method, headers=headers)
+    if logger is not None:
+        # URL has no credentials (Digest is via opener); safe to log at DEBUG.
+        logger.debug("ISAPI request %s %s", method, url)
+    try:
+        with opener.open(req, timeout=timeout_s) as resp:
+            status = getattr(resp, "status", None) or resp.getcode()
+            body = resp.read()
+            if logger is not None:
+                logger.debug(
+                    "ISAPI response %s %s -> %s (%s bytes)\n%s",
+                    method,
+                    url,
+                    status,
+                    len(body),
+                    _isapi_debug_body(body),
+                )
+            return body
+    except HTTPError as e:
+        err_body = b""
+        try:
+            err_body = e.read() or b""
+        except Exception:
+            pass
+        if logger is not None:
+            logger.debug(
+                "ISAPI response %s %s -> %s (%s bytes)\n%s",
+                method,
+                url,
+                e.code,
+                len(err_body),
+                _isapi_debug_body(err_body),
+            )
+        raise RuntimeError(f"ISAPI HTTP {e.code}") from e
+    except URLError as e:
+        if logger is not None:
+            logger.debug(
+                "ISAPI request %s %s failed: unreachable (%s)",
+                method,
+                url,
+                e.reason,
+            )
+        raise RuntimeError(f"ISAPI unreachable: {e.reason}") from e
+    except TimeoutError as e:
+        if logger is not None:
+            logger.debug("ISAPI request %s %s failed: timeout", method, url)
+        raise RuntimeError("ISAPI timeout") from e
+
+
 def fetch_channel_ids(
     addr: str,
     username: str,
@@ -138,56 +218,19 @@ def fetch_channel_ids(
     logger=None,
 ) -> list[str]:
     """GET /ISAPI/Streaming/channels (Digest) → list of channel id strings."""
-    base = _http_base(addr)
-    url = f"{base}/ISAPI/Streaming/channels"
-    pwd_mgr = HTTPPasswordMgrWithDefaultRealm()
-    pwd_mgr.add_password(None, base, username or "", password or "")
-    opener = build_opener(HTTPDigestAuthHandler(pwd_mgr))
-    req = Request(url, method="GET", headers={"Accept": "application/xml"})
-    if logger is not None:
-        # URL has no credentials (Digest is via opener); safe to log at DEBUG.
-        logger.debug("ISAPI request GET %s", url)
-    try:
-        with opener.open(req, timeout=timeout_s) as resp:
-            status = getattr(resp, "status", None) or resp.getcode()
-            body = resp.read()
-            if logger is not None:
-                logger.debug(
-                    "ISAPI response GET %s -> %s (%s bytes)\n%s",
-                    url,
-                    status,
-                    len(body),
-                    _isapi_debug_body(body),
-                )
-    except HTTPError as e:
-        err_body = b""
-        try:
-            err_body = e.read() or b""
-        except Exception:
-            pass
-        if logger is not None:
-            logger.debug(
-                "ISAPI response GET %s -> %s (%s bytes)\n%s",
-                url,
-                e.code,
-                len(err_body),
-                _isapi_debug_body(err_body),
-            )
-        raise RuntimeError(f"ISAPI HTTP {e.code}") from e
-    except URLError as e:
-        if logger is not None:
-            logger.debug("ISAPI request GET %s failed: unreachable (%s)", url, e.reason)
-        raise RuntimeError(f"ISAPI unreachable: {e.reason}") from e
-    except TimeoutError as e:
-        if logger is not None:
-            logger.debug("ISAPI request GET %s failed: timeout", url)
-        raise RuntimeError("ISAPI timeout") from e
-
+    body = _isapi_request(
+        addr,
+        username,
+        password,
+        "/ISAPI/Streaming/channels",
+        timeout_s=timeout_s,
+        logger=logger,
+    )
     try:
         root = ET.fromstring(body)
     except ET.ParseError as e:
         if logger is not None:
-            logger.debug("ISAPI response GET %s: invalid XML", url)
+            logger.debug("ISAPI Streaming/channels: invalid XML")
         raise RuntimeError("ISAPI returned invalid XML") from e
 
     ids: list[str] = []
@@ -208,6 +251,262 @@ def fetch_channel_ids(
     return ids
 
 
+def _hik_cm_stamp(moment: datetime) -> str:
+    """ContentMgmt search stamp as NVR-local wall time (no Z → device local TZ)."""
+    naive = moment.replace(tzinfo=None) if moment.tzinfo is not None else moment
+    return naive.strftime("%Y-%m-%dT%H:%M:%S")
+
+
+def _parse_cm_stamp(raw: str | None) -> datetime | None:
+    if not raw:
+        return None
+    text = str(raw).strip().replace(" ", "T", 1)
+    tz = _START_TZ_SUFFIX.search(text)
+    if tz:
+        text = text[: tz.start()]
+    for fmt in ("%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M"):
+        try:
+            return datetime.strptime(text, fmt)
+        except ValueError:
+            continue
+    return None
+
+
+def _datetime_local_value(moment: datetime) -> str:
+    naive = moment.replace(tzinfo=None) if moment.tzinfo is not None else moment
+    return naive.strftime("%Y-%m-%dT%H:%M")
+
+
+def _build_cm_search_xml(
+    track_id: str,
+    start: datetime,
+    end: datetime,
+    *,
+    offset: int,
+    max_results: int,
+) -> bytes:
+    search_id = str(uuid.uuid4()).upper()
+    xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        "<CMSearchDescription>"
+        f"<searchID>{search_id}</searchID>"
+        f"<trackIDList><trackID>{track_id}</trackID></trackIDList>"
+        "<timeSpanList><timeSpan>"
+        f"<startTime>{_hik_cm_stamp(start)}</startTime>"
+        f"<endTime>{_hik_cm_stamp(end)}</endTime>"
+        "</timeSpan></timeSpanList>"
+        f"<maxResults>{int(max_results)}</maxResults>"
+        f"<searchResultPostion>{int(offset)}</searchResultPostion>"
+        "</CMSearchDescription>"
+    )
+    return xml.encode("utf-8")
+
+
+def _parse_cm_search_result(body: bytes) -> tuple[str, list[tuple[datetime, datetime]]]:
+    """Return (responseStatusStrg, [(start, end), ...])."""
+    try:
+        root = ET.fromstring(body)
+    except ET.ParseError as e:
+        raise RuntimeError("ISAPI returned invalid XML") from e
+
+    status = "OK"
+    for el in root.iter():
+        if _local(el.tag) == "responseStatusStrg":
+            status = (el.text or "").strip().upper() or "OK"
+            break
+
+    spans: list[tuple[datetime, datetime]] = []
+    for el in root.iter():
+        if _local(el.tag) != "searchMatchItem":
+            continue
+        start_raw = end_raw = None
+        for child in el.iter():
+            tag = _local(child.tag)
+            if tag == "startTime" and start_raw is None:
+                start_raw = child.text
+            elif tag == "endTime" and end_raw is None:
+                end_raw = child.text
+        start = _parse_cm_stamp(start_raw)
+        end = _parse_cm_stamp(end_raw)
+        if start is None:
+            continue
+        if end is None or end < start:
+            end = start
+        spans.append((start, end))
+    return status, spans
+
+
+def _search_recording_spans(
+    addr: str,
+    username: str,
+    password: str,
+    track_id: str,
+    start: datetime,
+    end: datetime,
+    *,
+    timeout_s: float = ISAPI_SEARCH_TIMEOUT_S,
+    page_size: int = RECORDING_SEARCH_PAGE_SIZE,
+    max_pages: int = RECORDING_SEARCH_MAX_PAGES,
+    logger=None,
+) -> list[tuple[datetime, datetime]]:
+    """Paginated ContentMgmt/search → list of (start, end) spans."""
+    track = str(track_id or "").strip()
+    if not track:
+        raise ValueError("empty track id")
+    if end.tzinfo is not None:
+        end = end.replace(tzinfo=None)
+    if start.tzinfo is not None:
+        start = start.replace(tzinfo=None)
+    if end <= start:
+        return []
+
+    spans_out: list[tuple[datetime, datetime]] = []
+    offset = 0
+    for _ in range(max(1, int(max_pages))):
+        body = _isapi_request(
+            addr,
+            username,
+            password,
+            "/ISAPI/ContentMgmt/search",
+            method="POST",
+            data=_build_cm_search_xml(
+                track, start, end, offset=offset, max_results=page_size
+            ),
+            content_type="application/xml",
+            timeout_s=timeout_s,
+            logger=logger,
+        )
+        status, spans = _parse_cm_search_result(body)
+        if status == "NO MATCHES" or not spans:
+            break
+        spans_out.extend(spans)
+        offset += len(spans)
+        if status != "MORE" or len(spans) < page_size:
+            break
+    return spans_out
+
+
+def fetch_recording_bounds(
+    addr: str,
+    username: str,
+    password: str,
+    track_id: str,
+    *,
+    lookback_days: int = DEFAULT_RECORDING_LOOKBACK_DAYS,
+    timeout_s: float = ISAPI_SEARCH_TIMEOUT_S,
+    page_size: int = RECORDING_SEARCH_PAGE_SIZE,
+    max_pages: int = RECORDING_SEARCH_MAX_PAGES,
+    now: datetime | None = None,
+    logger=None,
+) -> dict[str, str] | None:
+    """POST /ISAPI/ContentMgmt/search → {min, max} datetime-local strings, or None.
+
+    Coarse archive extent only — holes inside are common; use
+    ``find_recording_cover`` before playback.
+    """
+    end = (now or datetime.now()).replace(microsecond=0)
+    if end.tzinfo is not None:
+        end = end.replace(tzinfo=None)
+    start = end - timedelta(days=max(1, int(lookback_days)))
+    spans = _search_recording_spans(
+        addr,
+        username,
+        password,
+        track_id,
+        start,
+        end,
+        timeout_s=timeout_s,
+        page_size=page_size,
+        max_pages=max_pages,
+        logger=logger,
+    )
+    if not spans:
+        return None
+    earliest = min(s[0] for s in spans)
+    latest = max(s[1] for s in spans)
+    return {
+        "min": _datetime_local_value(earliest),
+        "max": _datetime_local_value(latest),
+        "days": _days_from_spans(spans),
+    }
+
+
+def _days_from_spans(spans: list[tuple[datetime, datetime]]) -> list[str]:
+    """Calendar days (YYYY-MM-DD) that intersect any recorded span."""
+    days: set[str] = set()
+    for span_start, span_end in spans:
+        day = span_start.date()
+        last = span_end.date()
+        if last < day:
+            last = day
+        while day <= last:
+            days.add(day.isoformat())
+            day = day + timedelta(days=1)
+    return sorted(days)
+
+
+def find_recording_cover(
+    addr: str,
+    username: str,
+    password: str,
+    track_id: str,
+    at: datetime,
+    *,
+    window_before: timedelta = timedelta(hours=12),
+    window_after: timedelta = timedelta(hours=12),
+    timeout_s: float = ISAPI_SEARCH_TIMEOUT_S,
+    logger=None,
+) -> datetime | None:
+    """Return a playable start if a recorded span covers ``at``, else None.
+
+    ContentMgmt min/max spans often leave holes; RTSP playback only works inside
+    real segments. When ``at`` falls inside a segment, returns ``at`` (NVR-local).
+    """
+    moment = at.replace(tzinfo=None) if at.tzinfo is not None else at
+    spans = _search_recording_spans(
+        addr,
+        username,
+        password,
+        track_id,
+        moment - window_before,
+        moment + window_after,
+        timeout_s=timeout_s,
+        page_size=RECORDING_SEARCH_PAGE_SIZE,
+        max_pages=min(10, RECORDING_SEARCH_MAX_PAGES),
+        logger=logger,
+    )
+    for span_start, span_end in spans:
+        if span_start <= moment <= span_end:
+            return moment
+    return None
+
+
+def _hik_rtsp_stamp(moment: datetime) -> str:
+    """Format for Hikvision starttime/endtime (NVR local wall time, trailing Z)."""
+    naive = moment.replace(tzinfo=None) if moment.tzinfo is not None else moment
+    return naive.strftime("%Y%m%dT%H%M%SZ")
+
+
+def parse_playback_start(raw: str | None) -> datetime | None:
+    """Parse ?start= as NVR-local naive datetime (from datetime-local / ISO without Z)."""
+    if raw is None:
+        return None
+    text = str(raw).strip()
+    if not text:
+        return None
+    # datetime-local: 2024-01-02T15:04 or with seconds; allow space separator.
+    text = text.replace(" ", "T", 1)
+    tz = _START_TZ_SUFFIX.search(text)
+    if tz:
+        text = text[: tz.start()]
+    for fmt in ("%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M"):
+        try:
+            return datetime.strptime(text, fmt)
+        except ValueError:
+            continue
+    raise ValueError(f"invalid start time: {raw!r}")
+
+
 def build_rtsp_url(
     addr: str,
     username: str,
@@ -215,13 +514,27 @@ def build_rtsp_url(
     channel: str,
     *,
     default_rtsp_port: int = DEFAULT_RTSP_PORT,
+    start: datetime | None = None,
+    end: datetime | None = None,
 ) -> str:
+    """Live Channels URL, or tracks playback URL when ``start`` is set."""
     host, port = _rtsp_host_port(addr, default_port=default_rtsp_port)
     user = quote(username or "", safe="")
     pwd = quote(password or "", safe="")
     ch = quote(str(channel).strip(), safe="")
     auth = f"{user}:{pwd}@" if (username or password) else ""
-    return f"rtsp://{auth}{host}:{port}/Streaming/Channels/{ch}"
+    if start is None:
+        return f"rtsp://{auth}{host}:{port}/Streaming/Channels/{ch}"
+    if end is None:
+        end = start + DEFAULT_PLAYBACK_WINDOW
+    if end <= start:
+        raise ValueError("playback end must be after start")
+    st = _hik_rtsp_stamp(start)
+    et = _hik_rtsp_stamp(end)
+    return (
+        f"rtsp://{auth}{host}:{port}/Streaming/tracks/{ch}/"
+        f"?starttime={st}&endtime={et}"
+    )
 
 
 def list_dvrs_with_channels(
@@ -282,8 +595,10 @@ def resolve_dvr(entries: list[dict], dvr_id: str) -> dict | None:
     return parse_streaming_dvr_config(entries).get(dvr_id)
 
 
-def query_stream_params(path: str) -> tuple[str | None, str | None]:
-    """Extract (dvr, channel) from ?dvr=&channel= on a request path."""
+def query_stream_params(
+    path: str,
+) -> tuple[str | None, str | None, str | None]:
+    """Extract (dvr, channel, start) from ?dvr=&channel=&start= on a request path."""
     parsed = urlsplit(path or "")
     q = parse_qs(parsed.query, keep_blank_values=True)
 
@@ -296,6 +611,7 @@ def query_stream_params(path: str) -> tuple[str | None, str | None]:
 
     dvr = first("dvr")
     channel = first("channel")
+    start = first("start")
     if dvr and dvr.upper().startswith("DVR_"):
         dvr = dvr[4:]
-    return dvr, channel
+    return dvr, channel, start

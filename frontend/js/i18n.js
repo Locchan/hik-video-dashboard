@@ -67,7 +67,22 @@
       "streaming.load_failed": "Failed to load channels.",
       "streaming.disabled": "The streaming feature is disabled.",
       "streaming.connecting": "Connecting…",
+      "streaming.connecting_playback": "Loading recording…",
       "streaming.stream_failed": "Could not play stream.",
+      "streaming.no_recording": "No recording at this time.",
+      "streaming.select_time": "Apply",
+      "streaming.apply": "Apply",
+      "streaming.view": "View",
+      "streaming.live": "Live",
+      "streaming.recording": "Recording",
+      "streaming.mode_live": "Live",
+      "streaming.mode_playback": "Recording",
+      "streaming.currently_playing": "Currently playing: {mode}",
+      "streaming.pause": "Pause",
+      "streaming.play": "Play",
+      "streaming.time_required": "Choose a date and time first.",
+      "streaming.loading_archive": "Loading available times…",
+      "streaming.no_archive": "No recordings found for this channel.",
       "streaming.player_unsupported": "Live MPEG-TS playback is not supported in this browser.",
 
       "config.title": "Configuration — HIK Video Dashboard",
@@ -153,7 +168,7 @@
       "help.ALERT_VIEW.opt.ALERTS_DIR":
         "Server environment variable: filesystem path to the alerts tree (clip + snap folders). Not a config-table entry.",
       "help.STREAMING.body":
-        "Live view from Hikvision DVRs. Register each DVR with HTTP (ISAPI channel list) and RTSP addresses, then open channels on the Streaming page (MPEG-TS over WebSocket via ffmpeg copy remux). DVR keys are usually owned by root so normal users can stream without reading secrets.",
+        "Live view from Hikvision DVRs. Register each DVR with HTTP (ISAPI channel list) and RTSP addresses, then open channels on the Streaming page (MPEG-TS over WebSocket via ffmpeg copy remux). Live and Recording buttons switch modes; Recording opens an inline flatpickr calendar (days with ContentMgmt segments only) with Apply. Live returns to the live Channels URL. Apply verifies a real segment covers the chosen time before RTSP. DVR keys are usually owned by root so normal users can stream without reading secrets.",
       "help.STREAMING.opt.NAME":
         "Optional display name for DVR X (shown in the Streaming UI).",
       "help.STREAMING.opt.HTTP_ADDR":
@@ -230,7 +245,22 @@
       "streaming.load_failed": "Не удалось загрузить каналы.",
       "streaming.disabled": "Функция трансляции отключена.",
       "streaming.connecting": "Подключение…",
+      "streaming.connecting_playback": "Загрузка записи…",
       "streaming.stream_failed": "Не удалось воспроизвести поток.",
+      "streaming.no_recording": "На это время записи нет.",
+      "streaming.select_time": "Применить",
+      "streaming.apply": "Применить",
+      "streaming.view": "Просмотр",
+      "streaming.live": "Прямой эфир",
+      "streaming.recording": "Запись",
+      "streaming.mode_live": "Прямой эфир",
+      "streaming.mode_playback": "Запись",
+      "streaming.currently_playing": "Сейчас: {mode}",
+      "streaming.pause": "Пауза",
+      "streaming.play": "Играть",
+      "streaming.time_required": "Сначала выберите дату и время.",
+      "streaming.loading_archive": "Загрузка доступного времени…",
+      "streaming.no_archive": "Записей для этого канала не найдено.",
       "streaming.player_unsupported": "Этот браузер не поддерживает живой MPEG-TS.",
 
       "config.title": "Настройки — HIK Video Dashboard",
@@ -316,7 +346,7 @@
       "help.ALERT_VIEW.opt.ALERTS_DIR":
         "Переменная окружения сервера: путь к дереву алертов (клипы и снимки). Не запись таблицы config.",
       "help.STREAMING.body":
-        "Прямой просмотр с DVR Hikvision. Для каждого DVR задайте HTTP (ISAPI список каналов) и RTSP, затем открывайте каналы на странице Трансляция (MPEG-TS по WebSocket через ffmpeg copy). Ключи DVR обычно принадлежат root, чтобы обычные пользователи могли смотреть поток без доступа к секретам.",
+        "Прямой просмотр с DVR Hikvision. Для каждого DVR задайте HTTP (ISAPI список каналов) и RTSP, затем открывайте каналы на странице Трансляция (MPEG-TS по WebSocket через ffmpeg copy). Кнопки «Прямой эфир» и «Запись» переключают режим; «Запись» открывает календарь flatpickr (только дни с сегментами ContentMgmt) с «Применить». «Прямой эфир» возвращает к живому Channels. Перед RTSP проверяется попадание в реальный сегмент. Ключи DVR обычно принадлежат root, чтобы обычные пользователи могли смотреть поток без доступа к секретам.",
       "help.STREAMING.opt.NAME":
         "Необязательное отображаемое имя DVR X в интерфейсе трансляции.",
       "help.STREAMING.opt.HTTP_ADDR":

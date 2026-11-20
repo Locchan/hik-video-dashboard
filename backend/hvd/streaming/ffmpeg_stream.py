@@ -10,10 +10,22 @@ import time
 # How often we poll the WS for client close while waiting on ffmpeg stdout.
 _RECV_POLL_S = 0.25
 _CHUNK = 64 * 1024
+# No stdout within this window → treat as missing recording / unreachable RTSP.
+FIRST_BYTE_TIMEOUT_S = 8.0
 
 
-def stream_rtsp_mpegts(ws, rtsp_url: str, *, logger=None) -> None:
-    """Block until the WebSocket closes or ffmpeg exits; always kills ffmpeg."""
+def stream_rtsp_mpegts(
+    ws,
+    rtsp_url: str,
+    *,
+    logger=None,
+    first_byte_timeout_s: float = FIRST_BYTE_TIMEOUT_S,
+) -> None:
+    """Block until the WebSocket closes or ffmpeg exits; always kills ffmpeg.
+
+    If no MPEG-TS bytes arrive within ``first_byte_timeout_s``, send a JSON
+    ``{error, code: no_recording}`` frame so the UI can show a clear message.
+    """
     cmd = [
         "ffmpeg",
         "-hide_banner",
@@ -45,7 +57,7 @@ def stream_rtsp_mpegts(ws, rtsp_url: str, *, logger=None) -> None:
             if logger is not None:
                 logger.error("ffmpeg not found on PATH")
             try:
-                ws.send({"error": "ffmpeg not available"})
+                ws.send({"error": "ffmpeg not available", "code": "ffmpeg_missing"})
             except Exception:
                 pass
             return
@@ -53,12 +65,32 @@ def stream_rtsp_mpegts(ws, rtsp_url: str, *, logger=None) -> None:
         stdout = proc.stdout
         assert stdout is not None
         fd = stdout.fileno()
+        got_byte = False
+        deadline = time.monotonic() + max(0.5, float(first_byte_timeout_s))
         while ws.open and proc.poll() is None:
-            ready, _, _ = select.select([fd], [], [], _RECV_POLL_S)
+            wait = _RECV_POLL_S
+            if not got_byte:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    try:
+                        ws.send(
+                            {
+                                "error": "No recording or stream data for this time",
+                                "code": "no_recording",
+                            }
+                        )
+                    except Exception:
+                        pass
+                    if logger is not None:
+                        logger.info("ffmpeg produced no data within %.1fs", first_byte_timeout_s)
+                    break
+                wait = min(wait, remaining)
+            ready, _, _ = select.select([fd], [], [], wait)
             if ready:
                 chunk = os.read(fd, _CHUNK)
                 if not chunk:
                     break
+                got_byte = True
                 try:
                     ws.send(chunk)
                 except Exception:
@@ -70,6 +102,18 @@ def stream_rtsp_mpegts(ws, rtsp_url: str, *, logger=None) -> None:
                 break
             if not ws.open:
                 break
+
+        # ffmpeg exited before any payload (auth / empty track / bad URL).
+        if not got_byte and ws.open:
+            try:
+                ws.send(
+                    {
+                        "error": "No recording or stream data for this time",
+                        "code": "no_recording",
+                    }
+                )
+            except Exception:
+                pass
 
         if proc.poll() is None:
             try:

@@ -1,0 +1,12 @@
+flatpickr
+Version: 4.6.13
+Upstream: https://github.com/flatpickr/flatpickr
+Tag: https://github.com/flatpickr/flatpickr/archive/refs/tags/v4.6.13.tar.gz
+License: MIT (see LICENSE.md in this directory)
+
+Copyright (c) 2017 Gregory Petrosyan
+
+This product includes software from the flatpickr project.
+The browser build (dist/flatpickr.min.js, flatpickr.min.css, themes/dark.css,
+l10n/ru.js) was taken from the npm package flatpickr@4.6.13, which matches
+GitHub tag v4.6.13 (the GitHub source tarball does not ship prebuilt dist/).
